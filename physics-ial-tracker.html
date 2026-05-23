@@ -1,0 +1,2782 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jana's Physics IAL Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --lavender: #C8B6FF;
+    --pink: #FDC5F5;
+    --sky: #62F8F6;
+    --periwinkle: #B8C0FF;
+    --violet: #7D53DE;
+    --soft-purple: #E7C6FF;
+    --deep-purple: #4A1D96;
+    --baby-blue: #D1F5FF;
+    --white: #FEFEFE;
+    --cream: #FFF9FF;
+    --text-dark: #2D1B69;
+    --text-mid: #5B4E8A;
+    --text-light: #9B8EC4;
+    --success: #78E3FD;
+    --done: #B388EB;
+    --not-done: #F7AEF8;
+    --bg: #FAF5FF;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text-dark);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* SIDEBAR */
+  .sidebar {
+    position: fixed; left: 0; top: 0; bottom: 0;
+    width: 240px;
+    background: linear-gradient(180deg, #2D1B69 0%, #4A1D96 50%, #7D53DE 100%);
+    z-index: 100;
+    display: flex; flex-direction: column;
+    padding: 0 0 20px 0;
+    overflow-y: auto;
+  }
+
+  .sidebar-header {
+    padding: 28px 20px 20px;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+  }
+
+  .sidebar-header h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: 18px;
+    color: var(--pink);
+    line-height: 1.3;
+  }
+
+  .sidebar-header p {
+    font-size: 11px;
+    color: rgba(255,255,255,0.5);
+    margin-top: 4px;
+  }
+
+  .nav-section {
+    padding: 12px 0;
+  }
+
+  .nav-label {
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.35);
+    padding: 8px 20px 4px;
+  }
+
+  .nav-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 20px;
+    cursor: pointer;
+    transition: all 0.2s;
+    border-left: 3px solid transparent;
+    font-size: 13px;
+    color: rgba(255,255,255,0.7);
+  }
+
+  .nav-item:hover { background: rgba(255,255,255,0.08); color: white; }
+  .nav-item.active {
+    background: rgba(253,197,245,0.15);
+    border-left-color: var(--pink);
+    color: var(--pink);
+    font-weight: 600;
+  }
+
+  .nav-item .nav-icon { font-size: 15px; width: 20px; text-align: center; }
+
+  /* MAIN */
+  .main {
+    margin-left: 240px;
+    min-height: 100vh;
+    padding: 32px 36px;
+  }
+
+  /* TABS */
+  .tab-content { display: none; }
+  .tab-content.active { display: block; animation: fadeIn 0.3s ease; }
+
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* PAGE HEADER */
+  .page-header {
+    margin-bottom: 28px;
+  }
+
+  .page-header h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 32px;
+    color: var(--deep-purple);
+    line-height: 1.2;
+  }
+
+  .page-header p {
+    color: var(--text-light);
+    font-size: 14px;
+    margin-top: 4px;
+  }
+
+  /* CARDS */
+  .card {
+    background: white;
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: 0 2px 12px rgba(125,83,222,0.08);
+    margin-bottom: 20px;
+  }
+
+  .card-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 16px;
+    color: var(--deep-purple);
+    margin-bottom: 16px;
+    display: flex; align-items: center; gap: 8px;
+  }
+
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; }
+  .grid-4 { display: grid; grid-template-columns: repeat(4,1fr); gap: 16px; }
+
+  /* STAT CARDS */
+  .stat-card {
+    background: white;
+    border-radius: 14px;
+    padding: 20px;
+    box-shadow: 0 2px 12px rgba(125,83,222,0.08);
+    text-align: center;
+  }
+
+  .stat-card .stat-num {
+    font-family: 'Playfair Display', serif;
+    font-size: 36px;
+    font-weight: 700;
+    color: var(--violet);
+  }
+
+  .stat-card .stat-label {
+    font-size: 12px;
+    color: var(--text-light);
+    margin-top: 4px;
+  }
+
+  /* COUNTDOWN */
+  .countdown-cards { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; margin-bottom: 24px; }
+
+  .countdown-card {
+    border-radius: 16px;
+    padding: 20px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .countdown-card.oct { background: linear-gradient(135deg, #C8B6FF, #E7C6FF); }
+  .countdown-card.jan { background: linear-gradient(135deg, #FDC5F5, #FFD6FF); }
+  .countdown-card.may { background: linear-gradient(135deg, #62F8F6, #D1F5FF); }
+
+  .countdown-card .days {
+    font-family: 'Playfair Display', serif;
+    font-size: 48px;
+    font-weight: 900;
+    color: var(--deep-purple);
+    line-height: 1;
+  }
+
+  .countdown-card .session-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--deep-purple);
+    margin-top: 6px;
+  }
+
+  .countdown-card .session-date {
+    font-size: 11px;
+    color: var(--text-mid);
+    margin-top: 2px;
+  }
+
+  /* PROGRESS BAR */
+  .progress-bar {
+    height: 8px;
+    background: var(--soft-purple);
+    border-radius: 100px;
+    overflow: hidden;
+    margin-top: 8px;
+  }
+
+  .progress-fill {
+    height: 100%;
+    border-radius: 100px;
+    background: linear-gradient(90deg, var(--violet), var(--lavender));
+    transition: width 0.5s ease;
+  }
+
+  /* UNIT CARDS */
+  .unit-card {
+    background: white;
+    border-radius: 14px;
+    padding: 20px;
+    box-shadow: 0 2px 12px rgba(125,83,222,0.07);
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+    border-top: 4px solid var(--lavender);
+  }
+
+  .unit-card:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(125,83,222,0.15); }
+  .unit-card:nth-child(2) { border-top-color: var(--pink); }
+  .unit-card:nth-child(3) { border-top-color: var(--sky); }
+  .unit-card:nth-child(4) { border-top-color: var(--periwinkle); }
+  .unit-card:nth-child(5) { border-top-color: #B388EB; }
+  .unit-card:nth-child(6) { border-top-color: #78E3FD; }
+
+  .unit-card h3 { font-size: 13px; font-weight: 600; color: var(--deep-purple); }
+  .unit-card p { font-size: 11px; color: var(--text-light); margin-top: 2px; }
+  .unit-card .unit-pct {
+    font-family: 'Playfair Display', serif;
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--violet);
+    margin: 8px 0 4px;
+  }
+
+  /* TOPIC TABLE */
+  .topic-table { width: 100%; border-collapse: collapse; }
+  .topic-table th {
+    text-align: left;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    color: var(--text-light);
+    padding: 8px 12px;
+    background: var(--bg);
+    border-bottom: 1px solid var(--soft-purple);
+  }
+
+  .topic-table td {
+    padding: 10px 12px;
+    font-size: 13px;
+    border-bottom: 1px solid rgba(200,182,255,0.2);
+    vertical-align: middle;
+  }
+
+  .topic-table tr:hover td { background: rgba(231,198,255,0.1); }
+
+  .topic-section-row td {
+    background: linear-gradient(90deg, rgba(200,182,255,0.15), transparent);
+    font-weight: 600;
+    font-size: 12px;
+    color: var(--violet);
+    padding: 12px 12px 6px;
+  }
+
+  .status-badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 100px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+
+  .badge-done { background: #E0FFF0; color: #2D9B5A; }
+  .badge-revision { background: #FFF3E0; color: #E07D00; }
+  .badge-notdone { background: rgba(247,174,248,0.3); color: #9B3DB8; }
+
+  .check-btn {
+    width: 22px; height: 22px;
+    border-radius: 6px;
+    border: 2px solid var(--lavender);
+    background: white;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px;
+    transition: all 0.2s;
+    flex-shrink: 0;
+  }
+
+  .check-btn.checked { background: var(--violet); border-color: var(--violet); color: white; }
+
+  /* FORMULA CARDS */
+  .formula-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px,1fr)); gap: 14px; }
+
+  .formula-card {
+    background: white;
+    border-radius: 12px;
+    padding: 16px;
+    box-shadow: 0 2px 8px rgba(125,83,222,0.07);
+    border-left: 4px solid var(--lavender);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .formula-card:hover { transform: translateY(-1px); box-shadow: 0 4px 16px rgba(125,83,222,0.15); }
+  .formula-card.mastered { border-left-color: #2D9B5A; background: #F0FFF4; }
+  .formula-card.learning { border-left-color: #E07D00; background: #FFFDF0; }
+
+  .formula-card .formula-name { font-size: 12px; font-weight: 600; color: var(--text-mid); }
+  .formula-card .formula-eq {
+    font-size: 16px;
+    color: var(--deep-purple);
+    margin: 6px 0;
+    font-family: 'Playfair Display', serif;
+  }
+
+  .formula-card .formula-unit { font-size: 11px; color: var(--violet); }
+
+  .formula-status-btn {
+    margin-top: 10px;
+    display: flex; gap: 6px;
+  }
+
+  .f-btn {
+    padding: 4px 10px;
+    border-radius: 100px;
+    border: none;
+    font-size: 11px;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 600;
+    transition: all 0.2s;
+  }
+
+  .f-btn.mastered { background: #E0FFF0; color: #2D9B5A; }
+  .f-btn.mastered.active { background: #2D9B5A; color: white; }
+  .f-btn.learning { background: #FFF3E0; color: #E07D00; }
+  .f-btn.learning.active { background: #E07D00; color: white; }
+
+  /* QUIZ */
+  .quiz-card {
+    background: linear-gradient(135deg, #2D1B69, #7D53DE);
+    border-radius: 20px;
+    padding: 40px;
+    text-align: center;
+    color: white;
+    min-height: 220px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    cursor: pointer;
+    transition: transform 0.2s;
+  }
+
+  .quiz-card:hover { transform: scale(1.01); }
+
+  .quiz-card .q-label { font-size: 12px; color: var(--lavender); letter-spacing: 1px; margin-bottom: 16px; }
+  .quiz-card .q-name { font-size: 18px; font-weight: 600; color: var(--pink); margin-bottom: 8px; }
+  .quiz-card .q-eq {
+    font-family: 'Playfair Display', serif;
+    font-size: 32px;
+    color: white;
+  }
+
+  .quiz-card.flipped .q-eq { color: var(--sky); font-size: 20px; }
+
+  .quiz-controls { display: flex; gap: 12px; margin-top: 20px; }
+
+  .q-btn {
+    padding: 12px 28px;
+    border-radius: 100px;
+    border: none;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .q-btn.knew { background: #78E3FD; color: var(--deep-purple); }
+  .q-btn.knew:hover { background: #5DD8F3; }
+  .q-btn.didnt { background: rgba(253,197,245,0.3); color: var(--pink); border: 1px solid var(--pink); }
+  .q-btn.didnt:hover { background: rgba(253,197,245,0.5); }
+  .q-btn.flip { background: rgba(255,255,255,0.15); color: white; }
+  .q-btn.flip:hover { background: rgba(255,255,255,0.25); }
+
+  /* WEEKLY TRACKER */
+  .week-grid {
+    display: grid;
+    grid-template-columns: 120px repeat(7,1fr);
+    gap: 6px;
+    margin-top: 12px;
+  }
+
+  .week-grid .day-header {
+    text-align: center;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-light);
+    padding: 6px;
+  }
+
+  .week-grid .subject-label {
+    font-size: 12px;
+    color: var(--text-dark);
+    display: flex; align-items: center;
+    font-weight: 500;
+  }
+
+  .hour-input {
+    text-align: center;
+    border: 1px solid var(--soft-purple);
+    border-radius: 8px;
+    padding: 8px 4px;
+    font-size: 13px;
+    font-family: 'DM Sans', sans-serif;
+    color: var(--deep-purple);
+    background: white;
+    width: 100%;
+    transition: border-color 0.2s;
+    outline: none;
+  }
+
+  .hour-input:focus { border-color: var(--violet); box-shadow: 0 0 0 3px rgba(125,83,222,0.1); }
+
+  /* SCHEDULE */
+  .schedule-phase {
+    margin-bottom: 28px;
+  }
+
+  .phase-header {
+    border-radius: 12px;
+    padding: 14px 20px;
+    margin-bottom: 14px;
+    display: flex; align-items: center; gap: 12px;
+  }
+
+  .phase-header.oct { background: linear-gradient(90deg, rgba(200,182,255,0.4), rgba(231,198,255,0.2)); }
+  .phase-header.jan { background: linear-gradient(90deg, rgba(253,197,245,0.4), rgba(255,214,255,0.2)); }
+  .phase-header.may { background: linear-gradient(90deg, rgba(98,248,246,0.3), rgba(209,245,255,0.2)); }
+
+  .phase-header h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 18px;
+    color: var(--deep-purple);
+  }
+
+  .phase-header .phase-sub { font-size: 12px; color: var(--text-mid); }
+
+  .schedule-week {
+    background: white;
+    border-radius: 10px;
+    padding: 14px 18px;
+    margin-bottom: 8px;
+    display: grid;
+    grid-template-columns: 100px 1fr auto;
+    gap: 12px;
+    align-items: center;
+    box-shadow: 0 1px 6px rgba(125,83,222,0.06);
+    transition: all 0.2s;
+  }
+
+  .schedule-week:hover { box-shadow: 0 3px 12px rgba(125,83,222,0.12); }
+
+  .schedule-week .week-num {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--violet);
+    letter-spacing: 0.5px;
+  }
+
+  .schedule-week .week-topic { font-size: 13px; color: var(--text-dark); }
+  .schedule-week .week-practice { font-size: 11px; color: var(--text-light); margin-top: 2px; }
+
+  /* PAST PAPERS TABLE */
+  .papers-table { width: 100%; border-collapse: collapse; }
+  .papers-table th {
+    text-align: left;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-light);
+    padding: 10px 14px;
+    background: var(--bg);
+    border-bottom: 2px solid var(--soft-purple);
+    letter-spacing: 0.3px;
+  }
+
+  .papers-table td {
+    padding: 11px 14px;
+    font-size: 13px;
+    border-bottom: 1px solid rgba(200,182,255,0.2);
+  }
+
+  .papers-table tr:hover td { background: rgba(231,198,255,0.1); }
+
+  .grade-badge {
+    display: inline-block;
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    text-align: center; line-height: 28px;
+    font-size: 12px; font-weight: 700;
+  }
+
+  .grade-a-star { background: #FFD700; color: #7D5A00; }
+  .grade-a { background: #C8B6FF; color: var(--deep-purple); }
+  .grade-b { background: #D1F5FF; color: #1A7D8A; }
+  .grade-c { background: #FFE0E0; color: #C02020; }
+  .grade-e { background: #F0F0F0; color: #888; }
+
+  /* SCORE INPUT */
+  .score-input {
+    width: 60px;
+    border: 1px solid var(--soft-purple);
+    border-radius: 6px;
+    padding: 5px 8px;
+    font-size: 13px;
+    font-family: 'DM Sans', sans-serif;
+    color: var(--deep-purple);
+    outline: none;
+    text-align: center;
+  }
+
+  .score-input:focus { border-color: var(--violet); }
+
+  /* HISTORY FEED */
+  .history-item {
+    display: flex; gap: 14px; align-items: flex-start;
+    padding: 12px 0;
+    border-bottom: 1px solid rgba(200,182,255,0.2);
+  }
+
+  .history-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    margin-top: 5px;
+    flex-shrink: 0;
+  }
+
+  .history-item .h-time { font-size: 11px; color: var(--text-light); }
+  .history-item .h-text { font-size: 13px; color: var(--text-dark); }
+  .history-item .h-detail { font-size: 11px; color: var(--text-mid); margin-top: 2px; }
+
+  /* STREAK */
+  .streak-display {
+    background: linear-gradient(135deg, #4A1D96, #7D53DE);
+    border-radius: 16px;
+    padding: 24px;
+    text-align: center;
+    color: white;
+  }
+
+  .streak-display .flame { font-size: 48px; }
+  .streak-display .streak-num {
+    font-family: 'Playfair Display', serif;
+    font-size: 56px;
+    font-weight: 900;
+    color: var(--pink);
+    line-height: 1;
+  }
+
+  .streak-display .streak-label { font-size: 14px; color: var(--lavender); margin-top: 4px; }
+
+  /* WELLNESS */
+  .mood-btn {
+    padding: 12px 20px;
+    border-radius: 12px;
+    border: 2px solid transparent;
+    background: white;
+    cursor: pointer;
+    font-size: 22px;
+    transition: all 0.2s;
+    box-shadow: 0 2px 8px rgba(125,83,222,0.08);
+  }
+
+  .mood-btn:hover { transform: scale(1.1); }
+  .mood-btn.selected { border-color: var(--violet); background: rgba(200,182,255,0.2); }
+
+  .quote-card {
+    background: linear-gradient(135deg, rgba(200,182,255,0.3), rgba(253,197,245,0.3));
+    border-radius: 16px;
+    padding: 28px;
+    text-align: center;
+    border: 1px solid rgba(200,182,255,0.3);
+  }
+
+  .quote-card .quote-text {
+    font-family: 'Playfair Display', serif;
+    font-size: 20px;
+    color: var(--deep-purple);
+    line-height: 1.5;
+    font-style: italic;
+  }
+
+  .quote-card .quote-author { font-size: 12px; color: var(--text-light); margin-top: 12px; }
+
+  /* CHECKLIST */
+  .checklist-section { margin-bottom: 20px; }
+  .checklist-section h3 {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--violet);
+    margin-bottom: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .checklist-item {
+    display: flex; gap: 12px; align-items: flex-start;
+    padding: 10px 14px;
+    background: white;
+    border-radius: 10px;
+    margin-bottom: 6px;
+    box-shadow: 0 1px 5px rgba(125,83,222,0.06);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .checklist-item:hover { box-shadow: 0 3px 10px rgba(125,83,222,0.12); }
+  .checklist-item.done-item { opacity: 0.6; }
+  .checklist-item.done-item .item-text { text-decoration: line-through; color: var(--text-light); }
+
+  .checklist-item .item-text { font-size: 13px; color: var(--text-dark); }
+  .checklist-item .item-sub { font-size: 11px; color: var(--text-light); margin-top: 2px; }
+
+  /* ASSIGNMENTS */
+  .assign-row td { font-size: 13px; }
+  .assign-row.status-complete td { background: rgba(120,227,253,0.05); }
+  .assign-row.status-progress td { background: rgba(253,197,245,0.05); }
+
+  /* INPUT / BUTTON */
+  .btn {
+    padding: 10px 22px;
+    border-radius: 100px;
+    border: none;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 600;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .btn-primary { background: linear-gradient(135deg, var(--violet), var(--lavender)); color: white; }
+  .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
+  .btn-secondary { background: var(--soft-purple); color: var(--deep-purple); }
+  .btn-secondary:hover { background: var(--lavender); }
+
+  .input-field {
+    border: 1px solid var(--soft-purple);
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-size: 13px;
+    font-family: 'DM Sans', sans-serif;
+    color: var(--text-dark);
+    outline: none;
+    background: white;
+    width: 100%;
+    transition: border-color 0.2s;
+  }
+
+  .input-field:focus { border-color: var(--violet); box-shadow: 0 0 0 3px rgba(125,83,222,0.1); }
+
+  select.input-field { appearance: none; cursor: pointer; }
+
+  /* TIMETABLE */
+  .exam-session-header {
+    background: linear-gradient(90deg, var(--deep-purple), var(--violet));
+    color: white;
+    padding: 10px 16px;
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 13px;
+    margin: 16px 0 8px;
+    letter-spacing: 0.5px;
+  }
+
+  .exam-row {
+    display: grid;
+    grid-template-columns: 130px 160px 1fr 100px 100px;
+    gap: 10px;
+    padding: 11px 14px;
+    background: white;
+    border-radius: 10px;
+    margin-bottom: 6px;
+    align-items: center;
+    box-shadow: 0 1px 5px rgba(125,83,222,0.06);
+    font-size: 13px;
+  }
+
+  .exam-row .subject-tag {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 100px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+
+  .tag-physics { background: rgba(200,182,255,0.4); color: var(--deep-purple); }
+  .tag-maths { background: rgba(98,248,246,0.4); color: #0A6B6B; }
+  .tag-it { background: rgba(253,197,245,0.4); color: #7D1B6E; }
+  .tag-chem { background: rgba(255,214,180,0.4); color: #7D3A00; }
+  .tag-stats { background: rgba(209,245,255,0.4); color: #1A5C7D; }
+  .tag-mech { background: rgba(180,255,200,0.4); color: #1A6B3A; }
+
+  /* NOTIFICATION */
+  .toast {
+    position: fixed;
+    bottom: 30px; right: 30px;
+    background: linear-gradient(135deg, var(--violet), var(--lavender));
+    color: white;
+    padding: 12px 22px;
+    border-radius: 100px;
+    font-size: 13px;
+    font-weight: 600;
+    z-index: 999;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: all 0.3s;
+    pointer-events: none;
+    box-shadow: 0 8px 24px rgba(125,83,222,0.3);
+  }
+
+  .toast.show { opacity: 1; transform: translateY(0); }
+
+  /* SCROLLBAR */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--lavender); border-radius: 3px; }
+
+  .divider { height: 1px; background: rgba(200,182,255,0.3); margin: 20px 0; }
+
+  /* Responsive tweaks */
+  @media (max-width: 900px) {
+    .grid-4 { grid-template-columns: repeat(2,1fr); }
+    .grid-3 { grid-template-columns: 1fr 1fr; }
+    .countdown-cards { grid-template-columns: 1fr; }
+  }
+
+  .wellness-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .motivation-btn {
+    background: linear-gradient(135deg, #4A1D96, #7D53DE);
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 100px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-top: 14px;
+  }
+  .motivation-btn:hover { opacity: 0.9; transform: translateY(-1px); }
+
+  .checklist-progress {
+    font-size: 12px; color: var(--text-light); margin-bottom: 16px;
+  }
+  .checklist-progress span { color: var(--violet); font-weight: 700; }
+
+  .log-textarea {
+    width: 100%; border: 1px solid var(--soft-purple); border-radius: 10px;
+    padding: 12px 14px; font-size: 13px; font-family: 'DM Sans', sans-serif;
+    color: var(--text-dark); resize: vertical; min-height: 80px;
+    outline: none; background: white;
+  }
+  .log-textarea:focus { border-color: var(--violet); box-shadow: 0 0 0 3px rgba(125,83,222,0.1); }
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<nav class="sidebar">
+  <div class="sidebar-header">
+    <h1>Jana's Physics<br>IAL Tracker ⚛️</h1>
+    <p>Edexcel IAL 2026–2027</p>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-label">Overview</div>
+    <div class="nav-item active" onclick="showTab('dashboard')">
+      <span class="nav-icon">🏠</span> Dashboard
+    </div>
+    <div class="nav-item" onclick="showTab('timetable')">
+      <span class="nav-icon">📅</span> Exam Timetable
+    </div>
+    <div class="nav-item" onclick="showTab('schedule')">
+      <span class="nav-icon">🗓️</span> Study Schedule
+    </div>
+    <div class="nav-item" onclick="showTab('weekly')">
+      <span class="nav-icon">📊</span> Weekly Tracker
+    </div>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-label">Units</div>
+    <div class="nav-item" onclick="showTab('unit1')">
+      <span class="nav-icon">1️⃣</span> Unit 1 — Mechanics
+    </div>
+    <div class="nav-item" onclick="showTab('unit2')">
+      <span class="nav-icon">2️⃣</span> Unit 2 — Waves & Elec
+    </div>
+    <div class="nav-item" onclick="showTab('unit3')">
+      <span class="nav-icon">3️⃣</span> Unit 3 — Practical I
+    </div>
+    <div class="nav-item" onclick="showTab('unit4')">
+      <span class="nav-icon">4️⃣</span> Unit 4 — Fields
+    </div>
+    <div class="nav-item" onclick="showTab('unit5')">
+      <span class="nav-icon">5️⃣</span> Unit 5 — Thermo & Cosmo
+    </div>
+    <div class="nav-item" onclick="showTab('unit6')">
+      <span class="nav-icon">6️⃣</span> Unit 6 — Practical II
+    </div>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-label">Study Tools</div>
+    <div class="nav-item" onclick="showTab('formulas')">
+      <span class="nav-icon">📐</span> Formulas
+    </div>
+    <div class="nav-item" onclick="showTab('quiz')">
+      <span class="nav-icon">🧠</span> Formula Quiz
+    </div>
+    <div class="nav-item" onclick="showTab('keywords')">
+      <span class="nav-icon">🔑</span> Key Words
+    </div>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-label">Progress</div>
+    <div class="nav-item" onclick="showTab('papers')">
+      <span class="nav-icon">📝</span> Past Papers
+    </div>
+    <div class="nav-item" onclick="showTab('assignments')">
+      <span class="nav-icon">✅</span> Assignments
+    </div>
+    <div class="nav-item" onclick="showTab('mocks')">
+      <span class="nav-icon">🎯</span> Mock Exams
+    </div>
+    <div class="nav-item" onclick="showTab('checklist')">
+      <span class="nav-icon">☑️</span> Exam Checklist
+    </div>
+    <div class="nav-item" onclick="showTab('history')">
+      <span class="nav-icon">🕐</span> History Log
+    </div>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-label">Wellbeing</div>
+    <div class="nav-item" onclick="showTab('wellness')">
+      <span class="nav-icon">🌸</span> Wellness & Motivation
+    </div>
+  </div>
+</nav>
+
+<!-- MAIN CONTENT -->
+<main class="main">
+
+<!-- ═══════════════ DASHBOARD ═══════════════ -->
+<div id="tab-dashboard" class="tab-content active">
+  <div class="page-header">
+    <h2>🏠 Dashboard</h2>
+    <p>Welcome back, Jana! Racing Towards Excellence ⚡</p>
+  </div>
+
+  <!-- Countdowns -->
+  <div class="countdown-cards">
+    <div class="countdown-card oct">
+      <div class="days" id="days-oct">—</div>
+      <div class="session-name">October Session</div>
+      <div class="session-date">Units 1 & 2 · Oct 8, 2026</div>
+    </div>
+    <div class="countdown-card jan">
+      <div class="days" id="days-jan">—</div>
+      <div class="session-name">January Session</div>
+      <div class="session-date">Units 3 & 4 · Jan 2027</div>
+    </div>
+    <div class="countdown-card may">
+      <div class="days" id="days-may">—</div>
+      <div class="session-name">May Session</div>
+      <div class="session-date">Units 5 & 6 · May 2027</div>
+    </div>
+  </div>
+
+  <!-- Stats Row -->
+  <div class="grid-4" style="margin-bottom:20px">
+    <div class="stat-card">
+      <div class="stat-num" id="total-topics-done">0</div>
+      <div class="stat-label">Topics Completed</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num" id="streak-num-dash">0🔥</div>
+      <div class="stat-label">Day Streak</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num" id="total-hours-dash">0h</div>
+      <div class="stat-label">Hours This Week</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num" id="papers-done-dash">0</div>
+      <div class="stat-label">Past Papers Done</div>
+    </div>
+  </div>
+
+  <!-- Unit progress overview -->
+  <div class="card">
+    <div class="card-title">📈 Unit Progress Overview</div>
+    <div class="grid-3" id="unit-overview-cards"></div>
+  </div>
+
+  <!-- Quick log today -->
+  <div class="card">
+    <div class="card-title">⚡ Quick Log — Today</div>
+    <div style="display:flex; gap:12px; align-items:flex-end; flex-wrap:wrap">
+      <div style="flex:1; min-width:180px">
+        <label style="font-size:12px; color:var(--text-light); display:block; margin-bottom:6px">What did you study?</label>
+        <input class="input-field" id="quick-study-text" placeholder="e.g. Kinematics equations, Unit 1" />
+      </div>
+      <div style="width:100px">
+        <label style="font-size:12px; color:var(--text-light); display:block; margin-bottom:6px">Hours</label>
+        <input class="input-field" id="quick-study-hours" type="number" min="0.5" max="12" step="0.5" placeholder="2" />
+      </div>
+      <button class="btn btn-primary" onclick="logQuickStudy()">Log It ✨</button>
+    </div>
+  </div>
+
+  <!-- Target -->
+  <div class="quote-card">
+    <div class="quote-text">✨ A* in Physics | Master All 6 Units | Consistent Practice</div>
+    <div class="quote-author">Focus on mastery. Trust the process. You've got this, Jana! 💜</div>
+  </div>
+</div>
+
+<!-- ═══════════════ TIMETABLE ═══════════════ -->
+<div id="tab-timetable" class="tab-content">
+  <div class="page-header">
+    <h2>📅 Exam Timetable 2026–2027</h2>
+    <p>All your exam dates in one place</p>
+  </div>
+
+  <div class="card" style="margin-bottom:8px; display:flex; gap:20px; flex-wrap:wrap">
+    <div style="display:flex;align-items:center;gap:6px"><span class="subject-tag tag-physics" style="display:inline-block;padding:3px 10px;border-radius:100px;font-size:11px;font-weight:600">Physics</span></div>
+    <div style="display:flex;align-items:center;gap:6px"><span class="subject-tag tag-maths" style="display:inline-block;padding:3px 10px;border-radius:100px;font-size:11px;font-weight:600">Mathematics</span></div>
+    <div style="display:flex;align-items:center;gap:6px"><span class="subject-tag tag-chem" style="display:inline-block;padding:3px 10px;border-radius:100px;font-size:11px;font-weight:600">Chemistry</span></div>
+    <div style="display:flex;align-items:center;gap:6px"><span class="subject-tag tag-it" style="display:inline-block;padding:3px 10px;border-radius:100px;font-size:11px;font-weight:600">Info Technology</span></div>
+    <div style="display:flex;align-items:center;gap:6px"><span class="subject-tag tag-mech" style="display:inline-block;padding:3px 10px;border-radius:100px;font-size:11px;font-weight:600">Mechanics</span></div>
+    <div style="display:flex;align-items:center;gap:6px"><span class="subject-tag tag-stats" style="display:inline-block;padding:3px 10px;border-radius:100px;font-size:11px;font-weight:600">Statistics</span></div>
+  </div>
+
+  <div class="exam-session-header">📌 MAY–JUNE 2026</div>
+  <div id="timetable-mayjune2026"></div>
+
+  <div class="exam-session-header">🍂 OCTOBER–NOVEMBER 2026</div>
+  <div id="timetable-oct2026"></div>
+
+  <div class="exam-session-header">❄️ JANUARY 2027</div>
+  <div id="timetable-jan2027"></div>
+
+  <div class="exam-session-header">🌸 MAY–JUNE 2027</div>
+  <div id="timetable-may2027"></div>
+</div>
+
+<!-- ═══════════════ STUDY SCHEDULE ═══════════════ -->
+<div id="tab-schedule" class="tab-content">
+  <div class="page-header">
+    <h2>🗓️ Study Schedule</h2>
+    <p>Phase-by-phase plan: Units 1&2 → October · Units 3&4 → January · Units 5&6 → May</p>
+  </div>
+
+  <div class="schedule-phase">
+    <div class="phase-header oct">
+      <div>
+        <h3>🍂 Phase 1 — October Session</h3>
+        <div class="phase-sub">Units 1 & 2 · June 2026 → October 8, 2026</div>
+      </div>
+    </div>
+    <div id="schedule-oct"></div>
+  </div>
+
+  <div class="schedule-phase">
+    <div class="phase-header jan">
+      <div>
+        <h3>❄️ Phase 2 — January Session</h3>
+        <div class="phase-sub">Units 3 & 4 · October 2026 → January 2027</div>
+      </div>
+    </div>
+    <div id="schedule-jan"></div>
+  </div>
+
+  <div class="schedule-phase">
+    <div class="phase-header may">
+      <div>
+        <h3>🌸 Phase 3 — May Session</h3>
+        <div class="phase-sub">Units 5 & 6 · January 2027 → May 2027</div>
+      </div>
+    </div>
+    <div id="schedule-may"></div>
+  </div>
+</div>
+
+<!-- ═══════════════ WEEKLY TRACKER ═══════════════ -->
+<div id="tab-weekly" class="tab-content">
+  <div class="page-header">
+    <h2>📊 Weekly Study Tracker</h2>
+    <p>Log your study hours per subject each day</p>
+  </div>
+
+  <div class="card">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; flex-wrap:wrap; gap:12px">
+      <div class="card-title" style="margin-bottom:0">Week of: <span id="week-label" style="color:var(--violet)"></span></div>
+      <div style="display:flex; gap:8px">
+        <button class="btn btn-secondary" onclick="changeWeek(-1)">← Prev</button>
+        <button class="btn btn-secondary" onclick="changeWeek(1)">Next →</button>
+        <button class="btn btn-primary" onclick="saveWeek()">Save Week 💾</button>
+      </div>
+    </div>
+
+    <div class="week-grid" id="weekly-grid"></div>
+
+    <div style="margin-top:20px; padding-top:16px; border-top: 1px solid rgba(200,182,255,0.3); display:flex; gap:24px; flex-wrap:wrap">
+      <div><span style="font-size:12px; color:var(--text-light)">Total This Week</span><br><strong id="week-total" style="font-size:24px; color:var(--violet); font-family:'Playfair Display',serif">0h</strong></div>
+      <div><span style="font-size:12px; color:var(--text-light)">Daily Average</span><br><strong id="week-avg" style="font-size:24px; color:var(--violet); font-family:'Playfair Display',serif">0h</strong></div>
+      <div><span style="font-size:12px; color:var(--text-light)">Best Day</span><br><strong id="week-best" style="font-size:24px; color:var(--violet); font-family:'Playfair Display',serif">—</strong></div>
+    </div>
+  </div>
+
+  <!-- Weekly history -->
+  <div class="card">
+    <div class="card-title">📜 Weekly History</div>
+    <div id="weekly-history-list"></div>
+  </div>
+</div>
+
+<!-- ═══════════════ UNIT TABS ═══════════════ -->
+<div id="tab-unit1" class="tab-content">
+  <div class="page-header">
+    <h2>Unit 1 — Mechanics & Materials</h2>
+    <p>Exam: <strong>October 8, 2026</strong> · WPH01/01 · 1h 30min</p>
+  </div>
+  <div class="grid-2" style="margin-bottom:20px">
+    <div class="card" style="margin-bottom:0">
+      <div class="card-title">Progress</div>
+      <div style="font-family:'Playfair Display',serif; font-size:48px; color:var(--violet)" id="u1-pct">0%</div>
+      <div class="progress-bar"><div class="progress-fill" id="u1-bar" style="width:0%"></div></div>
+      <div style="font-size:12px; color:var(--text-light); margin-top:8px"><span id="u1-done">0</span> of <span id="u1-total">0</span> topics done</div>
+    </div>
+    <div class="card" style="margin-bottom:0">
+      <div class="card-title">Resources</div>
+      <div style="font-size:13px; color:var(--text-mid); line-height:2">📗 Physics Student Book 1 Edexcel<br>📘 Physics Book 1 Hodder<br>🔬 Lab experiments & Core Practicals</div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">Topics Checklist</div>
+    <table class="topic-table" id="unit1-table"></table>
+  </div>
+</div>
+
+<div id="tab-unit2" class="tab-content">
+  <div class="page-header">
+    <h2>Unit 2 — Waves & Electricity</h2>
+    <p>Exam: <strong>October 8, 2026</strong> · WPH02/02 · 1h 30min</p>
+  </div>
+  <div class="grid-2" style="margin-bottom:20px">
+    <div class="card" style="margin-bottom:0">
+      <div class="card-title">Progress</div>
+      <div style="font-family:'Playfair Display',serif; font-size:48px; color:var(--violet)" id="u2-pct">0%</div>
+      <div class="progress-bar"><div class="progress-fill" id="u2-bar" style="width:0%"></div></div>
+      <div style="font-size:12px; color:var(--text-light); margin-top:8px"><span id="u2-done">0</span> of <span id="u2-total">0</span> topics done</div>
+    </div>
+    <div class="card" style="margin-bottom:0">
+      <div class="card-title">Resources</div>
+      <div style="font-size:13px; color:var(--text-mid); line-height:2">📗 Physics Student Book 1 Edexcel<br>📘 Physics Book 1 Hodder<br>🔬 Lab experiments & Core Practicals</div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">Topics Checklist</div>
+    <table class="topic-table" id="unit2-table"></table>
+  </div>
+</div>
+
+<div id="tab-unit3" class="tab-content">
+  <div class="page-header">
+    <h2>Unit 3 — Practical Skills in Physics I</h2>
+    <p>Exam: <strong>January 2027</strong> · WPH03/03 · 1h 20min</p>
+  </div>
+  <div class="grid-2" style="margin-bottom:20px">
+    <div class="card" style="margin-bottom:0">
+      <div class="card-title">Progress</div>
+      <div style="font-family:'Playfair Display',serif; font-size:48px; color:var(--violet)" id="u3-pct">0%</div>
+      <div class="progress-bar"><div class="progress-fill" id="u3-bar" style="width:0%"></div></div>
+      <div style="font-size:12px; color:var(--text-light); margin-top:8px"><span id="u3-done">0</span> of <span id="u3-total">0</span> topics done</div>
+    </div>
+    <div class="card" style="margin-bottom:0">
+      <div class="card-title">Resources</div>
+      <div style="font-size:13px; color:var(--text-mid); line-height:2">📗 Physics Student Book 1 Edexcel<br>📘 Physics Book 1 Hodder<br>📋 Physics IAL: Lab Book</div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">Topics Checklist</div>
+    <table class="topic-table" id="unit3-table"></table>
+  </div>
+</div>
+
+<div id="tab-unit4" class="tab-content">
+  <div class="page-header">
+    <h2>Unit 4 — Further Mechanics, Fields & Particles</h2>
+    <p>Exam: <strong>January 2027</strong> · WPH04/04 · 1h 30min</p>
+  </div>
+  <div class="grid-2" style="margin-bottom:20px">
+    <div class="card" style="margin-bottom:0">
+      <div class="card-title">Progress</div>
+      <div style="font-family:'Playfair Display',serif; font-size:48px; color:var(--violet)" id="u4-pct">0%</div>
+      <div class="progress-bar"><div class="progress-fill" id="u4-bar" style="width:0%"></div></div>
+      <div style="font-size:12px; color:var(--text-light); margin-top:8px"><span id="u4-done">0</span> of <span id="u4-total">0</span> topics done</div>
+    </div>
+    <div class="card" style="margin-bottom:0">
+      <div class="card-title">Resources</div>
+      <div style="font-size:13px; color:var(--text-mid); line-height:2">📗 Physics Student Book 2<br>📘 Physics Book 2 Hodder<br>🔬 Lab experiments & Core Practicals</div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">Topics Checklist</div>
+    <table class="topic-table" id="unit4-table"></table>
+  </div>
+</div>
+
+<div id="tab-unit5" class="tab-content">
+  <div class="page-header">
+    <h2>Unit 5 — Thermodynamics, Radiation, Oscillations & Cosmology</h2>
+    <p>Exam: <strong>May 2027</strong> · WPH05/05 · 1h 30min</p>
+  </div>
+  <div class="grid-2" style="margin-bottom:20px">
+    <div class="card" style="margin-bottom:0">
+      <div class="card-title">Progress</div>
+      <div style="font-family:'Playfair Display',serif; font-size:48px; color:var(--violet)" id="u5-pct">0%</div>
+      <div class="progress-bar"><div class="progress-fill" id="u5-bar" style="width:0%"></div></div>
+      <div style="font-size:12px; color:var(--text-light); margin-top:8px"><span id="u5-done">0</span> of <span id="u5-total">0</span> topics done</div>
+    </div>
+    <div class="card" style="margin-bottom:0">
+      <div class="card-title">Resources</div>
+      <div style="font-size:13px; color:var(--text-mid); line-height:2">📗 Physics Student Book 2<br>📘 Physics Book 2 Hodder<br>🔬 Lab experiments & Core Practicals</div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">Topics Checklist</div>
+    <table class="topic-table" id="unit5-table"></table>
+  </div>
+</div>
+
+<div id="tab-unit6" class="tab-content">
+  <div class="page-header">
+    <h2>Unit 6 — Practical Skills in Physics II</h2>
+    <p>Exam: <strong>May 2027</strong> · WPH06/06 · 1h 20min</p>
+  </div>
+  <div class="grid-2" style="margin-bottom:20px">
+    <div class="card" style="margin-bottom:0">
+      <div class="card-title">Progress</div>
+      <div style="font-family:'Playfair Display',serif; font-size:48px; color:var(--violet)" id="u6-pct">0%</div>
+      <div class="progress-bar"><div class="progress-fill" id="u6-bar" style="width:0%"></div></div>
+      <div style="font-size:12px; color:var(--text-light); margin-top:8px"><span id="u6-done">0</span> of <span id="u6-total">0</span> topics done</div>
+    </div>
+    <div class="card" style="margin-bottom:0">
+      <div class="card-title">Resources</div>
+      <div style="font-size:13px; color:var(--text-mid); line-height:2">📗 Physics Student Book 2<br>📘 Physics Book 2 Hodder<br>📋 Physics IAL: Lab Book</div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">Topics Checklist</div>
+    <table class="topic-table" id="unit6-table"></table>
+  </div>
+</div>
+
+<!-- ═══════════════ FORMULAS ═══════════════ -->
+<div id="tab-formulas" class="tab-content">
+  <div class="page-header">
+    <h2>📐 Physics Formulas</h2>
+    <p>All equations for WPH01–WPH06 · Mark each as Mastered or Learning</p>
+  </div>
+
+  <div style="display:flex; gap:12px; margin-bottom:20px; flex-wrap:wrap">
+    <button class="btn btn-secondary" onclick="filterFormulas('all')">All</button>
+    <button class="btn btn-secondary" onclick="filterFormulas('Unit 1')">Unit 1</button>
+    <button class="btn btn-secondary" onclick="filterFormulas('Unit 2')">Unit 2</button>
+    <button class="btn btn-secondary" onclick="filterFormulas('Unit 4')">Unit 4</button>
+    <button class="btn btn-secondary" onclick="filterFormulas('Unit 5')">Unit 5</button>
+    <button class="btn btn-secondary" onclick="filterFormulas('mastered')">✅ Mastered</button>
+    <button class="btn btn-secondary" onclick="filterFormulas('learning')">📖 Learning</button>
+  </div>
+
+  <div class="formula-grid" id="formula-grid"></div>
+</div>
+
+<!-- ═══════════════ QUIZ ═══════════════ -->
+<div id="tab-quiz" class="tab-content">
+  <div class="page-header">
+    <h2>🧠 Formula Quiz</h2>
+    <p>Flashcard-style self-testing for all formulas</p>
+  </div>
+
+  <div class="grid-2" style="margin-bottom:20px">
+    <div class="stat-card"><div class="stat-num" id="quiz-score">0</div><div class="stat-label">Knew It ✅</div></div>
+    <div class="stat-card"><div class="stat-num" id="quiz-miss">0</div><div class="stat-label">Didn't Know ❌</div></div>
+  </div>
+
+  <div class="quiz-card" id="quiz-card" onclick="flipQuiz()">
+    <div class="q-label">CLICK TO FLIP · FORMULA QUIZ</div>
+    <div class="q-name" id="quiz-name">Loading...</div>
+    <div class="q-eq" id="quiz-eq">—</div>
+    <div style="font-size:12px; color:rgba(255,255,255,0.4); margin-top:12px" id="quiz-hint">Click to reveal the formula</div>
+  </div>
+
+  <div style="display:flex; gap:12px; margin-top:16px; justify-content:center; flex-wrap:wrap" id="quiz-btns">
+    <button class="q-btn flip" onclick="flipQuiz()">🔄 Flip</button>
+    <button class="q-btn knew" onclick="quizAnswer(true)">✅ Knew It!</button>
+    <button class="q-btn didnt" onclick="quizAnswer(false)">❌ Didn't Know</button>
+    <button class="q-btn flip" onclick="nextQuiz()">⏭ Skip</button>
+  </div>
+
+  <div style="text-align:center; margin-top:14px; font-size:12px; color:var(--text-light)" id="quiz-progress">Card 1 of 0</div>
+</div>
+
+<!-- ═══════════════ KEYWORDS ═══════════════ -->
+<div id="tab-keywords" class="tab-content">
+  <div class="page-header">
+    <h2>🔑 Exam Technique & Command Words</h2>
+    <p>Know exactly what examiners want for every command word</p>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Command Words</div>
+    <table class="papers-table">
+      <thead><tr><th>Command Word</th><th>What It Means</th><th>How to Answer</th><th>Marks</th></tr></thead>
+      <tbody id="keywords-table"></tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <div class="card-title">📋 Mark Scheme Breakdown</div>
+    <table class="papers-table">
+      <thead><tr><th>Aspect</th><th>What Examiners Look For</th><th>Marks</th><th>How to Get Full Marks</th></tr></thead>
+      <tbody id="markscheme-table"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ═══════════════ PAST PAPERS ═══════════════ -->
+<div id="tab-papers" class="tab-content">
+  <div class="page-header">
+    <h2>📝 Past Papers & Grade Boundaries</h2>
+    <p>Log your scores and track improvement over time</p>
+  </div>
+
+  <div class="grid-3" style="margin-bottom:20px" id="paper-stats"></div>
+
+  <div class="card">
+    <div class="card-title">Enter a Past Paper Score</div>
+    <div style="display:flex; gap:12px; flex-wrap:wrap; align-items:flex-end">
+      <div>
+        <label style="font-size:12px; color:var(--text-light); display:block; margin-bottom:6px">Year</label>
+        <select class="input-field" id="paper-year" style="width:100px">
+          <option>2019</option><option>2020</option><option>2021</option><option>2022</option><option>2023</option><option>2024</option><option>2025</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:12px; color:var(--text-light); display:block; margin-bottom:6px">Session</label>
+        <select class="input-field" id="paper-session" style="width:120px">
+          <option>January</option><option>June</option><option>October</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:12px; color:var(--text-light); display:block; margin-bottom:6px">Unit</label>
+        <select class="input-field" id="paper-unit" style="width:110px">
+          <option value="1">Unit 1</option><option value="2">Unit 2</option><option value="3">Unit 3</option><option value="4">Unit 4</option><option value="5">Unit 5</option><option value="6">Unit 6</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:12px; color:var(--text-light); display:block; margin-bottom:6px">Score / 75</label>
+        <input class="input-field" id="paper-score" type="number" min="0" max="75" style="width:90px" placeholder="e.g. 68" />
+      </div>
+      <div style="flex:1; min-width:180px">
+        <label style="font-size:12px; color:var(--text-light); display:block; margin-bottom:6px">Notes / Mistakes</label>
+        <input class="input-field" id="paper-notes" placeholder="e.g. Confused momentum in Q3" />
+      </div>
+      <button class="btn btn-primary" onclick="addPaperResult()">Add Result ✨</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Results Log</div>
+    <table class="papers-table">
+      <thead><tr><th>Year</th><th>Session</th><th>Unit</th><th>Score</th><th>%</th><th>Grade</th><th>Notes</th><th></th></tr></thead>
+      <tbody id="papers-results-table"></tbody>
+    </table>
+    <div id="papers-empty" style="text-align:center; color:var(--text-light); padding:30px; font-size:13px">No results logged yet. Add your first past paper above! 📝</div>
+  </div>
+</div>
+
+<!-- ═══════════════ ASSIGNMENTS ═══════════════ -->
+<div id="tab-assignments" class="tab-content">
+  <div class="page-header">
+    <h2>✅ Assignments Tracker</h2>
+    <p>All 6 units · Self-study mode — be honest with every mark!</p>
+  </div>
+
+  <div class="grid-4" style="margin-bottom:20px">
+    <div class="stat-card"><div class="stat-num" id="assign-total">24</div><div class="stat-label">Total Tasks</div></div>
+    <div class="stat-card"><div class="stat-num" id="assign-complete">0</div><div class="stat-label">Complete</div></div>
+    <div class="stat-card"><div class="stat-num" id="assign-avg">—</div><div class="stat-label">Avg Score %</div></div>
+    <div class="stat-card"><div class="stat-num" id="assign-overdue">0</div><div class="stat-label">Overdue</div></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Assignments</div>
+    <table class="papers-table" id="assignments-table-wrap">
+      <thead><tr><th>Unit</th><th>Type</th><th>Description</th><th>Max</th><th>Due</th><th>Score</th><th>%</th><th>Grade</th><th>Status</th><th>Notes</th></tr></thead>
+      <tbody id="assignments-tbody"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ═══════════════ MOCKS ═══════════════ -->
+<div id="tab-mocks" class="tab-content">
+  <div class="page-header">
+    <h2>🎯 Mock Exam Log</h2>
+    <p>Track all your mock exams across all units</p>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Log a Mock Exam</div>
+    <div style="display:flex; gap:12px; flex-wrap:wrap; align-items:flex-end">
+      <div>
+        <label style="font-size:12px; color:var(--text-light); display:block; margin-bottom:6px">Unit</label>
+        <select class="input-field" id="mock-unit" style="width:100px">
+          <option value="1">Unit 1</option><option value="2">Unit 2</option><option value="3">Unit 3</option><option value="4">Unit 4</option><option value="5">Unit 5</option><option value="6">Unit 6</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:12px; color:var(--text-light); display:block; margin-bottom:6px">Type</label>
+        <input class="input-field" id="mock-type" style="width:130px" placeholder="Full / Topic" />
+      </div>
+      <div>
+        <label style="font-size:12px; color:var(--text-light); display:block; margin-bottom:6px">Date</label>
+        <input class="input-field" id="mock-date" type="date" style="width:150px" />
+      </div>
+      <div>
+        <label style="font-size:12px; color:var(--text-light); display:block; margin-bottom:6px">Score / 100</label>
+        <input class="input-field" id="mock-score" type="number" min="0" max="100" style="width:90px" />
+      </div>
+      <div>
+        <label style="font-size:12px; color:var(--text-light); display:block; margin-bottom:6px">Target %</label>
+        <input class="input-field" id="mock-target" type="number" style="width:80px" placeholder="90" />
+      </div>
+      <div style="flex:1; min-width:180px">
+        <label style="font-size:12px; color:var(--text-light); display:block; margin-bottom:6px">Notes</label>
+        <input class="input-field" id="mock-notes" placeholder="Feedback / areas to improve" />
+      </div>
+      <button class="btn btn-primary" onclick="addMock()">Log Mock ✨</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Mock Results</div>
+    <table class="papers-table">
+      <thead><tr><th>Unit</th><th>Type</th><th>Date</th><th>Score</th><th>%</th><th>Grade</th><th>Target</th><th>Gap</th><th>Notes</th><th></th></tr></thead>
+      <tbody id="mocks-tbody"></tbody>
+    </table>
+    <div id="mocks-empty" style="text-align:center; color:var(--text-light); padding:30px; font-size:13px">No mock results yet. Log your first mock above! 🎯</div>
+  </div>
+</div>
+
+<!-- ═══════════════ EXAM CHECKLIST ═══════════════ -->
+<div id="tab-checklist" class="tab-content">
+  <div class="page-header">
+    <h2>☑️ Exam Checklist</h2>
+    <p>Everything you need to do before, during and after each exam</p>
+  </div>
+
+  <div class="checklist-progress">
+    <span id="checklist-done-count">0</span> of <span id="checklist-total-count">0</span> items completed
+    <div class="progress-bar" style="margin-top:8px"><div class="progress-fill" id="checklist-bar" style="width:0%"></div></div>
+  </div>
+
+  <button class="btn btn-secondary" onclick="resetChecklist()" style="margin-bottom:20px">🔄 Reset All (New Exam)</button>
+
+  <div class="grid-2" id="checklist-container"></div>
+</div>
+
+<!-- ═══════════════ HISTORY ═══════════════ -->
+<div id="tab-history" class="tab-content">
+  <div class="page-header">
+    <h2>🕐 History Log</h2>
+    <p>A complete record of everything you've done</p>
+  </div>
+
+  <div class="grid-2" style="margin-bottom:20px">
+    <div class="streak-display">
+      <div class="flame">🔥</div>
+      <div class="streak-num" id="streak-big">0</div>
+      <div class="streak-label">Day Study Streak</div>
+      <div style="font-size:11px; color:var(--lavender); margin-top:8px">Last studied: <span id="last-studied">Never</span></div>
+    </div>
+    <div class="card" style="margin-bottom:0">
+      <div class="card-title">All-time Stats</div>
+      <div style="display:flex; flex-direction:column; gap:10px">
+        <div style="display:flex; justify-content:space-between"><span style="font-size:13px; color:var(--text-mid)">Total topics ticked</span><strong style="color:var(--violet)" id="hist-topics">0</strong></div>
+        <div style="display:flex; justify-content:space-between"><span style="font-size:13px; color:var(--text-mid)">Study sessions logged</span><strong style="color:var(--violet)" id="hist-sessions">0</strong></div>
+        <div style="display:flex; justify-content:space-between"><span style="font-size:13px; color:var(--text-mid)">Total study hours</span><strong style="color:var(--violet)" id="hist-hours">0h</strong></div>
+        <div style="display:flex; justify-content:space-between"><span style="font-size:13px; color:var(--text-mid)">Past papers logged</span><strong style="color:var(--violet)" id="hist-papers">0</strong></div>
+        <div style="display:flex; justify-content:space-between"><span style="font-size:13px; color:var(--text-mid)">Formulas mastered</span><strong style="color:var(--violet)" id="hist-formulas">0</strong></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px">
+      <div class="card-title" style="margin-bottom:0">Activity Feed</div>
+      <button class="btn btn-secondary" style="font-size:11px; padding:6px 14px" onclick="clearHistory()">Clear History</button>
+    </div>
+    <div id="history-feed">
+      <div style="text-align:center; color:var(--text-light); padding:30px; font-size:13px">No activity yet. Start studying to see your history here! 🚀</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ WELLNESS ═══════════════ -->
+<div id="tab-wellness" class="tab-content">
+  <div class="page-header">
+    <h2>🌸 Wellness & Motivation</h2>
+    <p>Take care of yourself, Jana. You can't pour from an empty cup. 💜</p>
+  </div>
+
+  <!-- Mood -->
+  <div class="card">
+    <div class="card-title">How are you feeling today?</div>
+    <div style="display:flex; gap:12px; flex-wrap:wrap" id="mood-btns">
+      <button class="mood-btn" onclick="setMood('😊','Happy & focused')" title="Happy">😊</button>
+      <button class="mood-btn" onclick="setMood('😤','Determined & driven')" title="Determined">😤</button>
+      <button class="mood-btn" onclick="setMood('😴','Tired but trying')" title="Tired">😴</button>
+      <button class="mood-btn" onclick="setMood('😰','Anxious / stressed')" title="Anxious">😰</button>
+      <button class="mood-btn" onclick="setMood('😕','Struggling today')" title="Struggling">😕</button>
+      <button class="mood-btn" onclick="setMood('🌟','In the zone!')" title="In the zone">🌟</button>
+    </div>
+    <div id="mood-logged" style="font-size:13px; color:var(--text-mid); margin-top:12px; min-height:20px"></div>
+  </div>
+
+  <div class="wellness-grid">
+    <!-- Quote -->
+    <div>
+      <div class="quote-card">
+        <div class="quote-text" id="daily-quote">"The secret of getting ahead is getting started."</div>
+        <div class="quote-author" id="daily-quote-author">— Mark Twain</div>
+      </div>
+      <button class="motivation-btn" onclick="newQuote()">✨ New Quote</button>
+
+      <!-- Study Tips -->
+      <div class="card" style="margin-top:20px">
+        <div class="card-title">🧘 Study Tips for Exam Season</div>
+        <div style="font-size:13px; color:var(--text-mid); line-height:2">
+          🕐 Study in 25-min blocks (Pomodoro technique)<br>
+          💧 Stay hydrated — your brain needs water<br>
+          🌙 Aim for 8h sleep before exams<br>
+          🚶 Walk for 10 min when stuck on a problem<br>
+          📵 Phone in another room while studying<br>
+          🎵 Lo-fi music helps many students focus<br>
+          ✍️ Write notes by hand for better retention<br>
+          🍎 Eat brain food: nuts, blueberries, dark choc
+        </div>
+      </div>
+    </div>
+
+    <!-- Wellness Log -->
+    <div>
+      <div class="card">
+        <div class="card-title">📓 Journal — How's it going?</div>
+        <textarea class="log-textarea" id="journal-text" placeholder="Write anything on your mind today... how do you feel about Physics? What's going well? What's hard?" rows="5"></textarea>
+        <div style="display:flex; gap:8px; margin-top:10px">
+          <button class="btn btn-primary" onclick="saveJournal()">Save Entry 💜</button>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:0">
+        <div class="card-title">📜 Past Journal Entries</div>
+        <div id="journal-feed">
+          <div style="text-align:center; color:var(--text-light); padding:20px; font-size:13px">No entries yet. Write something above! 🌸</div>
+        </div>
+      </div>
+
+      <!-- Stress thermometer -->
+      <div class="card" style="margin-top:0">
+        <div class="card-title">🌡️ Stress Level Today</div>
+        <div style="display:flex; gap:8px; align-items:center">
+          <span style="font-size:12px; color:var(--text-light)">Calm</span>
+          <input type="range" id="stress-level" min="1" max="10" value="5" style="flex:1; accent-color: var(--violet);" oninput="updateStress(this.value)">
+          <span style="font-size:12px; color:var(--text-light)">Overwhelmed</span>
+        </div>
+        <div id="stress-msg" style="font-size:13px; color:var(--text-mid); margin-top:8px; text-align:center"></div>
+        <button class="btn btn-primary" style="margin-top:10px; width:100%" onclick="logStress()">Log Stress Level</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+</main>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ══════════════════════════════════════════
+// STATE MANAGEMENT (localStorage)
+// ══════════════════════════════════════════
+
+function save(key, val) {
+  try { localStorage.setItem('jana_' + key, JSON.stringify(val)); } catch(e) {}
+}
+
+function load(key, def) {
+  try {
+    const v = localStorage.getItem('jana_' + key);
+    return v !== null ? JSON.parse(v) : def;
+  } catch(e) { return def; }
+}
+
+// ══════════════════════════════════════════
+// DATA
+// ══════════════════════════════════════════
+
+const UNITS = {
+  1: {
+    name: "Mechanics & Materials",
+    sections: {
+      "Motion": ["Equations of Motion","Motion Graphs","Slope & Area of Motion Graphs","Scalars & Vectors","Resolving Vectors","Adding Vectors","Components of Velocity","Free-Body Force Diagrams"],
+      "Forces & Momentum": ["Forces & Acceleration","Mass, Weight & Gravitational Field Strength","Core Practical 1: Investigation the Acceleration of Free Fall","Newton's Third Law of Motion","Momentum","Conservation of Linear Momentum"],
+      "Moments": ["Moments","Centre of Gravity & The Principle of Moments"],
+      "Work, Energy & Power": ["Work","Kinetic Energy","Gravitational Potential Energy","The Principle of Conservation of Energy","Power","Efficiency"],
+      "Density, Upthrust & Viscous Drag": ["Density","Upthrust","Viscous Drag","Core Practical 2: Investigating Viscosity"],
+      "Stretching Materials": ["Hooke's Law","Stress, Strain & the Young Modulus","Force-Extension Graphs","Stress-Strain Graphs","Core Practical 3: Investigating Young Modulus","Elastic Strain Energy"]
+    }
+  },
+  2: {
+    name: "Waves & Electricity",
+    sections: {
+      "Transverse and Longitudinal Waves": ["Properties of Waves","The Wave Equation","Longitudinal Waves","Transverse Waves","Representing Waves on Graphs","Core Practical 4: Investigating the Speed of Sound"],
+      "Interference & Stationary Waves": ["Interference & Superposition of Waves","Phases & Path Difference","Stationary Waves","Wave Speed on a Stretched String","Core Practical 5: Investigating Stationary Waves"],
+      "Refraction, Reflection & Polarisation": ["Equation for the Intensity of Radiation","Refraction & Refractive Index","Critical Angle","Total Internal Reflection","Measuring Refractive Index","Plane Polarisation"],
+      "Waves, Electrons & Photons": ["Diffraction","The Diffraction Grating Equation","Core Practical 6: Investigating Diffraction Gratings","The Wave Nature of Electrons","The de Broglie Equation","Transmission & Reflection of Waves","Pulse-Echo Technique","Wave-Particle Duality","Energy of a Photon"],
+      "The Photoelectric Effect & Atomic Spectra": ["The Photoelectric Effect","The Photoelectric Equation","The Electronvolt","The Particle Nature of EM Radiation","Atomic Line Spectra"],
+      "Current, Potential Difference, Resistance & Power": ["Electric Current","Potential Difference","Ohm's Law","Charge Conservation in Circuits","Energy Conservation in Circuits","Resistance in Series & Parallel","Electrical Power","Current-Potential Difference Graphs"],
+      "Resistance, Resistivity & Potential Dividers": ["Electrical Resistivity","Core Practical 7: Investigating Resistivity","Calculating Current & Drift Velocity","Potential Difference & Conductor Length","Potential Dividers","Potential Dividers & Variable Resistance"],
+      "E.M.F & Modelling Resistance": ["Electromotive Force","Internal Resistance","E.M.F vs. Terminal Potential Difference","Core Practical 8: Investigating E.M.F. & Internal Resistance","Resistance & Temperature","Resistance & Illumination"]
+    }
+  },
+  3: {
+    name: "Practical Skills in Physics I",
+    sections: {
+      "Planning": ["Identifying Apparatus","Range & Resolution of Instruments","Calibrating Instruments","Measuring Variables","Control Variables & Fair Tests","Repeat Readings","Health & Safety","Data Collection","Uncertainty & Systematic Errors","Wider Implications"],
+      "Implementation & Measurements": ["Number of Readings","Range of Measurements","Significant Figures","Anomalous Readings","Using a Micrometer","Evaluating Experiments"],
+      "Processing Results": ["Calculations Using Experimental Data","Plotting Graphs","Using Units Correctly","Identifying Graphical Relationships","Interpreting Graphs","Reducing Errors","Suggesting Improvements","Uncertainties","Determining Uncertainty"],
+      "Core Practicals": ["CP1: Determine the Acceleration of a Freely-Falling Object","CP2: Use a Falling-Ball Method to Determine the Viscosity of a Liquid","CP3: Determine the Young Modulus of a Material","CP4: Determine the Speed of Sound in Air","CP5: Investigating Effects on Frequency of a Vibrating String","CP6: Determine the Wavelength of Light Using a Diffraction Grating","CP7: Determine the Electrical Resistivity of a Material","CP8: Determine the E.M.F and Internal Resistance of an Electrical Cell"]
+    }
+  },
+  4: {
+    name: "Further Mechanics, Fields & Particles",
+    sections: {
+      "Momentum & Impulse": ["Impulse","Core Practical 9: Investigating Impulse","Applying Conservation of Linear Momentum","Core Practical 20: Investigating Collisions using ICT","Elastic & Inelastic Collisions","Energy-Momentum Relation"],
+      "Circular Motion": ["Radians & Angular Displacement","Angular Velocity","Centripetal Acceleration","Maintaining Circular Motion","Centripetal Force"],
+      "Electric Fields": ["Defining an Electric Field","Electric Field Strength","Electric Force Between Two Charges","Electric Field Due to a Point Charge","Electric Field & Potential","Electric Field Between Parallel Plates","Electric Potential for a Radial Field","Representing Radial & Uniform Electric Fields"],
+      "Capacitance": ["Capacitance","Energy Stored by a Capacitor","Charge & Discharge Curves","Core Practical 11: Investigating Capacitor Charge & Discharge","Exponential Discharge in a Capacitor"],
+      "Magnetic Fields": ["Magnetic Flux Density, Flux & Flux Linkage","Magnetic Force on a Charged Particle","Magnetic Force on a Current-Carrying Conductor","Induced E.M.F in a Moving Coil","Induced E.M.F between Linked Coils","Faraday & Lenz's Law"],
+      "Exploring the Structure of Matter": ["Nucleon & Proton Number","The Nuclear Model of the Atom","Thermionic Emission","Particle Accelerators & Detectors","Radius of a Charged Particle in a Magnetic Field","Interpreting Particle Tracks","High Energy Particle Collisions","Annihilation of Matter & Antimatter","Unit Conversions for Energy & Mass","The Standard Model","Antimatter","Conservation Laws in Particle Physics","Particle Interaction Equations"]
+    }
+  },
+  5: {
+    name: "Thermodynamics, Radiation, Oscillations & Cosmology",
+    sections: {
+      "Thermal Energy Transfer": ["Specific Heat Capacity & Latent Heat","Core Practical 12: Calibrating a Thermistor","Core Practical 13: Investigating Specific Latent Heat"],
+      "Kinetic Theory & Ideal Gases": ["Internal Energy","Temperature & Absolute Zero","Ideal Gas Equations","Core Practical 14: Investigating Gas Pressure & Volume","Average Molecular Kinetic Energy"],
+      "Nuclear Fusion & Fission": ["Nuclear Binding Energy & Mass Deficit","Atomic Mass Unit","Binding Energy Per Nucleon Graph","Nuclear Fusion"],
+      "Radioactive Decay": ["Background Radiation","Alpha, Beta & Gamma Radiation","Nuclear Decay Equations","Core Practical 15: Investigating Gamma Radiation Absorption","The Random Nature of Nuclear Decay","Equations for Nuclear Physics"],
+      "Simple Harmonic Motion": ["Conditions for Simple Harmonic Motion","Equations for Simple Harmonic Motion","Period of Simple Harmonic Oscillators","Displacement-Time Graph for an Oscillator","Velocity-Time Graph for an Oscillator"],
+      "Resonance": ["Resonance","Core Practical 16: Investigating Resonance","Damped & Undamped Oscillating Systems","Free & Forced Oscillations","Resonance Graphs","Damping & Plastic Deformation"],
+      "Gravitational Fields": ["Gravitational Fields","Gravitational Field Strength","Newton's Law of Universal Gravitation","Gravitational Field Due to a Point Mass","Gravitational Potential for a Radial Field","Comparing Electric & Gravitational Fields","Orbital Motion"],
+      "Black Body Radiation": ["Black Body Radiation","Stefan-Boltzmann Law","Wien's Law"],
+      "Astronomy": ["Inverse Square Law of Flux","Parallax","Standard Candles","The Hertzsprung-Russell Diagram","The Life Cycle of Stars"],
+      "Cosmology": ["Doppler Shift","Equations for Cosmology","Cosmology"]
+    }
+  },
+  6: {
+    name: "Practical Skills in Physics II",
+    sections: {
+      "Planning": ["Identifying Appropriate Apparatus","Calibrating Instruments","Measuring Variables","Control Variables & Fair Tests","Repeat Readings","Health & Safety","Data Collection"],
+      "Implementation & Measurements": ["Evaluating Experiments","Number of Readings","Range of Measurements","Significant Figures","Correcting Units","Anomalous Readings"],
+      "Processing Results": ["Calculations Using Experimental Data","Plotting Graphs","Using Units Correctly","Trends & Patterns in Experimental Data","Interpreting Graphs","Precision & Accuracy","Reducing Errors","Suggesting Improvements","Uncertainties","Calculating Percentage Uncertainties","Determining Uncertainty"],
+      "Core Practicals": ["CP9: Relationship between force on an object and change of momentum","CP10: Use ICT to analyse collisions between small spheres","CP11: Oscilloscope to display p.d. across capacitor charging/discharging","CP12: Calibrate a thermistor in a potential divider circuit","CP13: Determine the specific latent heat of a phase change","CP14: Investigate relationship between pressure and volume of a gas","CP15: Investigate the absorption of gamma radiation by lead","CP16: Determine value of unknown mass using resonant frequencies"]
+    }
+  }
+};
+
+const FORMULAS = [
+  // Unit 1
+  { unit: "Unit 1", topic: "Kinematics", name: "SUVAT 1", eq: "s = (u+v)t/2" },
+  { unit: "Unit 1", topic: "Kinematics", name: "SUVAT 2", eq: "v = u + at" },
+  { unit: "Unit 1", topic: "Kinematics", name: "SUVAT 3", eq: "s = ut + ½at²" },
+  { unit: "Unit 1", topic: "Kinematics", name: "SUVAT 4", eq: "v² = u² + 2as" },
+  { unit: "Unit 1", topic: "Forces", name: "Newton's 2nd Law", eq: "ΣF = ma" },
+  { unit: "Unit 1", topic: "Forces", name: "Gravitational Field", eq: "g = F/m" },
+  { unit: "Unit 1", topic: "Forces", name: "Weight", eq: "W = mg" },
+  { unit: "Unit 1", topic: "Momentum", name: "Momentum", eq: "p = mv" },
+  { unit: "Unit 1", topic: "Moments", name: "Moment of Force", eq: "M = Fx" },
+  { unit: "Unit 1", topic: "Materials", name: "Density", eq: "ρ = m/V" },
+  { unit: "Unit 1", topic: "Materials", name: "Stokes' Law", eq: "F = 6πηrv" },
+  { unit: "Unit 1", topic: "Materials", name: "Hooke's Law", eq: "ΔF = kΔx" },
+  { unit: "Unit 1", topic: "Materials", name: "Stress", eq: "σ = F/A" },
+  { unit: "Unit 1", topic: "Materials", name: "Strain", eq: "ε = Δx/x" },
+  { unit: "Unit 1", topic: "Materials", name: "Young Modulus", eq: "E = σ/ε" },
+  { unit: "Unit 1", topic: "Materials", name: "Elastic Strain Energy", eq: "ΔE = ½FΔx" },
+  // Unit 2
+  { unit: "Unit 2", topic: "Waves", name: "Wave Speed", eq: "v = fλ" },
+  { unit: "Unit 2", topic: "Waves", name: "Wave on String", eq: "v = √(T/μ)" },
+  { unit: "Unit 2", topic: "Waves", name: "Intensity", eq: "I = P/A" },
+  { unit: "Unit 2", topic: "Waves", name: "Refractive Index", eq: "n = c/v" },
+  { unit: "Unit 2", topic: "Waves", name: "Critical Angle", eq: "sin C = 1/n" },
+  { unit: "Unit 2", topic: "Waves", name: "Diffraction Grating", eq: "nλ = d sinθ" },
+  { unit: "Unit 2", topic: "Quantum", name: "de Broglie", eq: "λ = h/p" },
+  { unit: "Unit 2", topic: "Quantum", name: "Photon Energy", eq: "E = hf" },
+  { unit: "Unit 2", topic: "Quantum", name: "Photoelectric Equation", eq: "hf = φ + ½mv²max" },
+  { unit: "Unit 2", topic: "Electricity", name: "Current", eq: "I = ΔQ/Δt" },
+  { unit: "Unit 2", topic: "Electricity", name: "Potential Difference", eq: "V = W/Q" },
+  { unit: "Unit 2", topic: "Electricity", name: "Resistance", eq: "R = V/I" },
+  { unit: "Unit 2", topic: "Electricity", name: "Power (1)", eq: "P = VI" },
+  { unit: "Unit 2", topic: "Electricity", name: "Power (2)", eq: "P = I²R" },
+  { unit: "Unit 2", topic: "Electricity", name: "Power (3)", eq: "P = V²/R" },
+  { unit: "Unit 2", topic: "Electricity", name: "Energy", eq: "W = VIt" },
+  { unit: "Unit 2", topic: "Electricity", name: "Resistivity", eq: "R = ρl/A" },
+  { unit: "Unit 2", topic: "Electricity", name: "Drift Velocity", eq: "I = nqvA" },
+  // Unit 4
+  { unit: "Unit 4", topic: "Circular Motion", name: "Velocity (circular)", eq: "v = ωr" },
+  { unit: "Unit 4", topic: "Circular Motion", name: "Period", eq: "T = 2π/ω" },
+  { unit: "Unit 4", topic: "Circular Motion", name: "Centripetal Acc (1)", eq: "a = v²/r" },
+  { unit: "Unit 4", topic: "Circular Motion", name: "Centripetal Acc (2)", eq: "a = rω²" },
+  { unit: "Unit 4", topic: "Circular Motion", name: "Centripetal Force", eq: "F = mv²/r" },
+  { unit: "Unit 4", topic: "Electric Fields", name: "Electric Field", eq: "E = F/Q" },
+  { unit: "Unit 4", topic: "Electric Fields", name: "Coulomb's Law", eq: "F = Q₁Q₂/4πε₀r²" },
+  { unit: "Unit 4", topic: "Electric Fields", name: "E between plates", eq: "E = V/d" },
+  { unit: "Unit 4", topic: "Capacitance", name: "Capacitance", eq: "C = Q/V" },
+  { unit: "Unit 4", topic: "Capacitance", name: "Energy (1)", eq: "W = ½QV" },
+  { unit: "Unit 4", topic: "Capacitance", name: "Energy (2)", eq: "W = ½CV²" },
+  { unit: "Unit 4", topic: "Capacitance", name: "Capacitor Discharge", eq: "Q = Q₀e^(-t/RC)" },
+  { unit: "Unit 4", topic: "Magnetic Fields", name: "Force (charged particle)", eq: "F = Bqv sinθ" },
+  { unit: "Unit 4", topic: "Magnetic Fields", name: "Force (conductor)", eq: "F = BIl sinθ" },
+  { unit: "Unit 4", topic: "Magnetic Fields", name: "Faraday's Law", eq: "ε = -d(NΦ)/dt" },
+  { unit: "Unit 4", topic: "Nuclear", name: "Mass-Energy", eq: "ΔE = c²Δm" },
+  // Unit 5
+  { unit: "Unit 5", topic: "Thermodynamics", name: "Specific Heat Capacity", eq: "ΔE = mcΔθ" },
+  { unit: "Unit 5", topic: "Thermodynamics", name: "Latent Heat", eq: "ΔE = LΔm" },
+  { unit: "Unit 5", topic: "Thermodynamics", name: "Ideal Gas Law", eq: "pV = NkT" },
+  { unit: "Unit 5", topic: "Thermodynamics", name: "Kinetic Theory", eq: "½m<c²> = 3/2 kT" },
+  { unit: "Unit 5", topic: "Nuclear Decay", name: "Activity", eq: "A = λN" },
+  { unit: "Unit 5", topic: "Nuclear Decay", name: "Decay Law", eq: "N = N₀e^(-λt)" },
+  { unit: "Unit 5", topic: "Nuclear Decay", name: "Half-life", eq: "λ = ln2/t½" },
+  { unit: "Unit 5", topic: "SHM", name: "SHM Force", eq: "F = -kx" },
+  { unit: "Unit 5", topic: "SHM", name: "SHM Acceleration", eq: "a = -ω²x" },
+  { unit: "Unit 5", topic: "SHM", name: "Displacement", eq: "x = A cosωt" },
+  { unit: "Unit 5", topic: "SHM", name: "SHM Period", eq: "T = 2π/ω = 1/f" },
+  { unit: "Unit 5", topic: "SHM", name: "Mass-Spring", eq: "T = 2π√(m/k)" },
+  { unit: "Unit 5", topic: "SHM", name: "Pendulum", eq: "T = 2π√(l/g)" },
+  { unit: "Unit 5", topic: "Gravity", name: "Gravitational Force", eq: "F = Gm₁m₂/r²" },
+  { unit: "Unit 5", topic: "Gravity", name: "Grav Field Strength", eq: "g = -Gm/r²" },
+  { unit: "Unit 5", topic: "Cosmology", name: "Stefan-Boltzmann Law", eq: "L = σT⁴A" },
+  { unit: "Unit 5", topic: "Cosmology", name: "Wien's Law", eq: "λmax·T = 2.898×10⁻³ mK" },
+  { unit: "Unit 5", topic: "Cosmology", name: "Intensity", eq: "I = L/4πd²" },
+  { unit: "Unit 5", topic: "Cosmology", name: "Redshift", eq: "z = Δλ/λ ≈ v/c" },
+  { unit: "Unit 5", topic: "Cosmology", name: "Hubble's Law", eq: "v = H₀d" },
+];
+
+const TIMETABLE = {
+  mayjune2026: [
+    { date:"Jun 6, 2026", code:"Cambridge 9626/02", subject:"Information Technology Practical", duration:"2h 30min", time:"09:00 AM", tag:"tag-it" },
+    { date:"Jun 28, 2026", code:"Edexcel IAL WME01/01", subject:"Mechanics 1", duration:"1h 30min", time:"08:30 AM", tag:"tag-mech" },
+    { date:"Jun 29, 2026", code:"Edexcel IAL WMA01/01", subject:"Mathematics Pure 1", duration:"1h 30min", time:"08:30 AM", tag:"tag-maths" },
+    { date:"Jun 29, 2026", code:"Cambridge 9626/12", subject:"Information Technology Theory", duration:"1h 15min", time:"11:30 AM", tag:"tag-it" },
+    { date:"Jul 2, 2026", code:"Edexcel IAL WCH02/02", subject:"Chemistry Unit 2", duration:"1h 30min", time:"11:30 AM", tag:"tag-chem" },
+    { date:"Jul 3, 2026", code:"Edexcel IAL WMA02/02", subject:"Mathematics Pure 2", duration:"1h 30min", time:"08:30 AM", tag:"tag-maths" },
+    { date:"Jul 12, 2026", code:"Edexcel IAL WCH03/03", subject:"Chemistry Unit 3", duration:"1h 20min", time:"08:30 AM", tag:"tag-chem" },
+  ],
+  oct2026: [
+    { date:"Oct 8, 2026", code:"Edexcel IAL WPH01/01", subject:"Physics Unit 1 — Mechanics & Materials", duration:"1h 30min", time:"TBC", tag:"tag-physics" },
+    { date:"Oct 15, 2026", code:"Edexcel IAL WPH02/02", subject:"Physics Unit 2 — Waves & Electricity", duration:"1h 30min", time:"TBC", tag:"tag-physics" },
+  ],
+  jan2027: [
+    { date:"Jan 1, 2027", code:"Edexcel IAL WMA03/03", subject:"Mathematics Pure 3", duration:"1h 30min", time:"TBC", tag:"tag-maths" },
+    { date:"Jan 1, 2027", code:"Edexcel IAL WPH03/03", subject:"Physics Unit 3 — Practical Skills I", duration:"1h 20min", time:"TBC", tag:"tag-physics" },
+    { date:"Jan 5, 2027", code:"Edexcel IAL WPH04/04", subject:"Physics Unit 4 — Further Mechanics, Fields & Particles", duration:"1h 30min", time:"TBC", tag:"tag-physics" },
+  ],
+  may2027: [
+    { date:"TBC", code:"Cambridge 9626/04", subject:"Information Technology Practical", duration:"2h 30min", time:"TBC", tag:"tag-it" },
+    { date:"TBC", code:"Cambridge 9626/31", subject:"Information Technology Theory", duration:"1h 15min", time:"TBC", tag:"tag-it" },
+    { date:"May 2027", code:"Edexcel IAL WPH05/05", subject:"Physics Unit 5 — Thermodynamics, Radiation, Oscillations & Cosmology", duration:"1h 30min", time:"TBC", tag:"tag-physics" },
+    { date:"May 2027", code:"Edexcel IAL WPH06/06", subject:"Physics Unit 6 — Practical Skills II", duration:"1h 20min", time:"TBC", tag:"tag-physics" },
+    { date:"May 2027", code:"Edexcel IAL WS101/01", subject:"Statistics 1", duration:"1h 30min", time:"TBC", tag:"tag-stats" },
+    { date:"May 2027", code:"Edexcel IAL WMA04/04", subject:"Mathematics Pure 4", duration:"1h 30min", time:"TBC", tag:"tag-maths" },
+  ]
+};
+
+const SCHEDULE_OCT = [
+  { week:"Week 1–2", topic:"Unit 1: Scalars & Vectors, Kinematics, SUVAT equations", practice:"Worksheets 1.1 · Practise 10 SUVAT questions", milestone:"Understand SUVAT equations" },
+  { week:"Week 3–4", topic:"Unit 1: Newton's Laws, Forces, Friction, Free-body diagrams", practice:"Worksheets 1.2 · Past paper Q1-5", milestone:"Apply F = ma correctly" },
+  { week:"Week 5–6", topic:"Unit 1: Momentum, Collisions, Impulse, Conservation Laws", practice:"Worksheet 1.3 · Past paper Q6-10", milestone:"Solve collision problems" },
+  { week:"Week 7–8", topic:"Unit 1: Work, Energy, Power, Conservation of Energy, Materials", practice:"Worksheet 1.4 · Full Unit 1 past paper", milestone:"Energy conservation mastery" },
+  { week:"Week 9–10", topic:"Unit 2: Waves — Properties, Wave Equation, Stationary Waves", practice:"Worksheets 2.1 · Practise 10 wave questions", milestone:"Understand wave behaviour" },
+  { week:"Week 11–12", topic:"Unit 2: Optics — Refraction, TIR, Refractive Index, Diffraction", practice:"Worksheets 2.2 · Past paper Q1-5", milestone:"Solve refraction problems" },
+  { week:"Week 13–14", topic:"Unit 2: Quantum — Photoelectric Effect, Photons, de Broglie", practice:"Worksheets 2.3 · Past paper Q6-10", milestone:"Explain wave-particle duality" },
+  { week:"Week 15–16", topic:"Unit 2: Electricity — Current, Resistance, Circuits, Resistivity", practice:"Worksheets 2.4 · Full Unit 2 past paper", milestone:"Circuit problem mastery" },
+  { week:"Week 17–18", topic:"Mix & Consolidation · Units 1 & 2 Timed Mock Exams", practice:"Full past papers under timed conditions", milestone:"Ready for October exams!" },
+];
+
+const SCHEDULE_JAN = [
+  { week:"Week 1–2", topic:"Unit 3: Planning — Apparatus, Variables, Fair Tests, Safety", practice:"Lab book practise · Write up a planning exercise", milestone:"Plan a complete experiment" },
+  { week:"Week 3–4", topic:"Unit 3: Implementation — Readings, Significant Figures, Anomalies", practice:"Data analysis exercises · Uncertainty calculations", milestone:"Correctly calculate uncertainties" },
+  { week:"Week 5–6", topic:"Unit 3: Processing — Graphs, Gradients, Error Bars, Relationships", practice:"Graph plotting practise · Core Practicals 1–4", milestone:"Interpret graphs confidently" },
+  { week:"Week 7–8", topic:"Unit 3: Core Practicals 5–8 revision & write-ups", practice:"Past paper practical questions · Timed write-up", milestone:"All 8 core practicals revised" },
+  { week:"Week 9–10", topic:"Unit 4: Momentum, Impulse, Circular Motion", practice:"Worksheets 4.1 · 10 circular motion problems", milestone:"Centripetal force mastery" },
+  { week:"Week 11–12", topic:"Unit 4: Electric Fields, Coulomb's Law, Capacitance", practice:"Worksheets 4.2 · Past paper field questions", milestone:"Solve electric field problems" },
+  { week:"Week 13–14", topic:"Unit 4: Magnetic Fields, Faraday's Law, Electromagnetic Induction", practice:"Worksheets 4.3 · Past paper EM questions", milestone:"Understand Lenz's Law" },
+  { week:"Week 15–16", topic:"Unit 4: Particle Physics — Standard Model, Nuclear Reactions", practice:"Worksheets 4.4 · Full Unit 4 past paper", milestone:"Particle physics confident" },
+  { week:"Week 17–18", topic:"Mix & Consolidation · Units 3 & 4 Timed Mock Exams", practice:"Full past papers under timed conditions", milestone:"Ready for January exams!" },
+];
+
+const SCHEDULE_MAY = [
+  { week:"Week 1–2", topic:"Unit 5: Thermal Energy — SHC, Latent Heat, Kinetic Theory", practice:"Worksheets 5.1 · Thermal physics questions", milestone:"Gas law mastery" },
+  { week:"Week 3–4", topic:"Unit 5: Nuclear Physics — Binding Energy, Fission, Fusion, Radioactive Decay", practice:"Worksheets 5.2 · Nuclear decay problems", milestone:"Decay equations fluent" },
+  { week:"Week 5–6", topic:"Unit 5: SHM — Equations, Displacement, Velocity, Resonance", practice:"Worksheets 5.3 · SHM problems", milestone:"SHM equations mastered" },
+  { week:"Week 7–8", topic:"Unit 5: Gravitational Fields, Stars, Cosmology, Hubble's Law", practice:"Worksheets 5.4 · Full Unit 5 past paper", milestone:"Cosmology confident" },
+  { week:"Week 9–10", topic:"Unit 6: Planning & Implementation (Advanced Level)", practice:"Extended practical write-ups", milestone:"Complex experiments planned" },
+  { week:"Week 11–12", topic:"Unit 6: Processing Results — Uncertainty, Precision, Accuracy", practice:"Uncertainty calculation practise · Core Practicals 9–12", milestone:"Percentage uncertainties mastered" },
+  { week:"Week 13–14", topic:"Unit 6: Core Practicals 13–16 revision & analysis", practice:"Past paper practical analysis · Timed write-up", milestone:"All Unit 6 core practicals done" },
+  { week:"Week 15–16", topic:"Mix & Consolidation · Full Mock Exams Units 5 & 6", practice:"Full past papers under timed conditions", milestone:"Ready for May exams! 🌸" },
+];
+
+const KEYWORDS = [
+  { word:"Define", means:"Give exact meaning", how:"State the term and explain in 1–2 sentences", marks:"1–2 marks", example:"Define momentum" },
+  { word:"Calculate", means:"Work out numerical answer", how:"Show ALL working, correct formula, units in final answer", marks:"3–5 marks", example:"Calculate the force needed to..." },
+  { word:"Explain", means:"Give reason(s) why", how:"State the fact AND WHY it's true (use physics principles)", marks:"2–3 marks", example:"Explain why the object accelerates" },
+  { word:"Analyse", means:"Break down and examine", how:"Identify key aspects, show relationships, evaluate", marks:"4–6 marks", example:"Analyse the motion in three phases" },
+  { word:"Derive", means:"Show how formula comes from first principles", how:"Start with known formula/principle, show steps logically", marks:"3–4 marks", example:"Derive the equation v² = u² + 2as" },
+  { word:"Describe", means:"State what happens", how:"Give a clear factual account, include key observations", marks:"2–3 marks", example:"Describe the motion of the ball" },
+  { word:"Evaluate", means:"Judge the quality/validity", how:"Give evidence for and against, reach a conclusion", marks:"3–5 marks", example:"Evaluate the accuracy of the method" },
+  { word:"State", means:"Give a brief answer", how:"1–2 words or a short sentence, no explanation needed", marks:"1 mark", example:"State Newton's First Law" },
+  { word:"Show that", means:"Prove the given statement", how:"Work through mathematically to reach the given answer", marks:"2–4 marks", example:"Show that the acceleration is 9.8 m/s²" },
+  { word:"Sketch", means:"Draw a graph or diagram", how:"Label axes, show correct shape and key features", marks:"2–3 marks", example:"Sketch a velocity-time graph" },
+];
+
+const MARKSCHEME = [
+  { aspect:"Knowledge", looks:"Correct formula, correct concept stated", marks:"1 mark per point", example:"Know v = u + at for kinematics", how:"State formula accurately with terms defined" },
+  { aspect:"Application", looks:"Formula used correctly for the scenario", marks:"2–3 marks", example:"Apply v² = u² + 2as to find distance", how:"Show you understand WHICH formula to use" },
+  { aspect:"Working", looks:"Show calculation steps clearly", marks:"1–2 marks", example:"F = ma → F = 2 × 5 = 10 N", how:"Never skip steps; examiners follow your working" },
+  { aspect:"Units", looks:"Correct units in final answer", marks:"1 mark", example:"Final answer: 45 m/s", how:"Always include units" },
+  { aspect:"Reasoning", looks:"Explain WHY you did each step", marks:"1–2 marks", example:"Because acceleration is constant, I used...", how:"Link formula choice to the physics" },
+];
+
+const EXAM_CHECKLIST = {
+  "📚 Week Before the Exam": [
+    { text: "Complete at least 3 timed past papers under exam conditions", sub: "Time yourself strictly" },
+    { text: "Review all formula sheets — no open-book", sub: "Test yourself on every equation" },
+    { text: "Go through all topic checklists — tick off gaps", sub: "Focus on red/Not Done areas" },
+    { text: "Make a mistake list from past papers", sub: "Don't repeat the same errors!" },
+    { text: "Revise all Core Practicals relevant to this unit", sub: "Practical questions are guaranteed marks" },
+    { text: "Complete all flashcard quizzes for this unit's formulas", sub: "Aim for 100% mastered" },
+  ],
+  "📋 Day Before the Exam": [
+    { text: "Pack your bag: pens (blue + spare), pencil, ruler, rubber, calculator", sub: "Check calculator has fresh batteries" },
+    { text: "Print or locate your exam timetable", sub: "Confirm venue, time, and exam code" },
+    { text: "Light revision only — no cramming new topics", sub: "Review key formulas, not new content" },
+    { text: "Prepare clothes for tomorrow", sub: "One less thing to think about!" },
+    { text: "Set two alarms", sub: "Don't rely on just one" },
+    { text: "Get 8+ hours of sleep", sub: "Your brain consolidates memory during sleep" },
+    { text: "Eat a proper dinner", sub: "Avoid heavy or sugary food" },
+  ],
+  "🌅 Morning of the Exam": [
+    { text: "Eat a proper breakfast", sub: "Brain food: eggs, oats, banana" },
+    { text: "Review your formula sheet one last time (max 10 mins)", sub: "Keep it brief and confident" },
+    { text: "Arrive at the venue at least 20 minutes early", sub: "Never rush to an exam" },
+    { text: "Leave phone in bag/locker — no exceptions", sub: "You cannot risk disqualification" },
+    { text: "Deep breaths — you are prepared", sub: "Anxiety is just excitement in disguise" },
+  ],
+  "✍️ During the Exam": [
+    { text: "Read ALL questions before starting", sub: "Identify the easy ones first" },
+    { text: "Show ALL working even for simple calculations", sub: "Partial marks exist!" },
+    { text: "Write units in every final answer", sub: "Free mark — don't lose it!" },
+    { text: "Use the command word to guide your answer length", sub: "Define = brief. Evaluate = detailed." },
+    { text: "Check: does your answer make physical sense?", sub: "A negative mass? A speed > c? Re-check." },
+    { text: "Leave time to review — at least 5 minutes", sub: "Catch silly mistakes" },
+    { text: "Attempt EVERY question — never leave blank", sub: "You can't score on an empty answer" },
+  ],
+  "✅ After the Exam": [
+    { text: "Don't discuss answers with classmates immediately", sub: "It creates unnecessary anxiety" },
+    { text: "Note down questions you found hard for revision", sub: "Helps next unit preparation" },
+    { text: "Take a proper break — you earned it!", sub: "Recharge before the next subject" },
+    { text: "Log the exam in your history tracker", sub: "Keep your records up to date" },
+  ]
+};
+
+const QUOTES = [
+  { text: "The secret of getting ahead is getting started.", author: "Mark Twain" },
+  { text: "Success is the sum of small efforts, repeated day in and day out.", author: "Robert Collier" },
+  { text: "The harder I work, the luckier I get.", author: "Samuel Goldwyn" },
+  { text: "Don't watch the clock; do what it does. Keep going.", author: "Sam Levenson" },
+  { text: "It always seems impossible until it's done.", author: "Nelson Mandela" },
+  { text: "The only way to do great work is to love what you do.", author: "Steve Jobs" },
+  { text: "Believe you can and you're halfway there.", author: "Theodore Roosevelt" },
+  { text: "You don't have to be great to start, but you have to start to be great.", author: "Zig Ziglar" },
+  { text: "Physics is the poetry of nature.", author: "Unknown" },
+  { text: "Every expert was once a beginner.", author: "Helen Hayes" },
+  { text: "Your only limit is you.", author: "Unknown" },
+  { text: "Work hard in silence, let success be your noise.", author: "Frank Ocean" },
+  { text: "The journey of a thousand miles begins with a single step.", author: "Lao Tzu" },
+  { text: "Education is the most powerful weapon you can use to change the world.", author: "Nelson Mandela" },
+  { text: "Push yourself, because no one else is going to do it for you.", author: "Unknown" },
+];
+
+const ASSIGNMENTS_DATA = [
+  { unit: 1, type: "Textbook Questions", desc: "Edexcel IAL Ch.1–4 end-of-chapter questions", max: 25, due: "2026-06-28", status: "Not Started" },
+  { unit: 1, type: "Past Paper – Full", desc: "Complete timed past paper under exam conditions", max: 80, due: "2026-07-03", status: "Not Started" },
+  { unit: 1, type: "Past Paper – Topic", desc: "Topic-specific Qs (e.g. kinematics only)", max: 25, due: "2026-07-08", status: "Not Started" },
+  { unit: 2, type: "Textbook Questions", desc: "Edexcel IAL Ch.1–4 end-of-chapter questions", max: 25, due: "2026-06-28", status: "Not Started" },
+  { unit: 2, type: "Past Paper – Full", desc: "Complete timed past paper under exam conditions", max: 80, due: "2026-07-03", status: "Not Started" },
+  { unit: 2, type: "Past Paper – Topic", desc: "Topic-specific Qs", max: 25, due: "2026-07-08", status: "Not Started" },
+  { unit: 3, type: "Textbook Questions", desc: "Edexcel IAL Ch.1–4 end-of-chapter questions", max: 25, due: "2026-06-28", status: "Not Started" },
+  { unit: 3, type: "Past Paper – Full", desc: "Complete timed past paper under exam conditions", max: 80, due: "2026-07-03", status: "Not Started" },
+  { unit: 3, type: "Past Paper – Topic", desc: "Topic-specific Qs", max: 25, due: "2026-07-08", status: "Not Started" },
+  { unit: 4, type: "Textbook Questions", desc: "Edexcel IAL Ch.1–4 end-of-chapter questions", max: 25, due: "2026-06-28", status: "Not Started" },
+  { unit: 4, type: "Past Paper – Full", desc: "Complete timed past paper under exam conditions", max: 80, due: "2026-07-03", status: "Not Started" },
+  { unit: 4, type: "Past Paper – Topic", desc: "Topic-specific Qs", max: 25, due: "2026-07-08", status: "Not Started" },
+  { unit: 5, type: "Textbook Questions", desc: "Edexcel IAL Ch.1–4 end-of-chapter questions", max: 25, due: "2026-06-28", status: "Not Started" },
+  { unit: 5, type: "Past Paper – Full", desc: "Complete timed past paper under exam conditions", max: 80, due: "2026-07-03", status: "Not Started" },
+  { unit: 5, type: "Past Paper – Topic", desc: "Topic-specific Qs", max: 25, due: "2026-07-08", status: "Not Started" },
+  { unit: 6, type: "Textbook Questions", desc: "Edexcel IAL Ch.1–4 end-of-chapter questions", max: 25, due: "2026-06-28", status: "Not Started" },
+  { unit: 6, type: "Past Paper – Full", desc: "Complete timed past paper under exam conditions", max: 80, due: "2026-07-03", status: "Not Started" },
+  { unit: 6, type: "Past Paper – Topic", desc: "Topic-specific Qs", max: 25, due: "2026-07-08", status: "Not Started" },
+];
+
+// ══════════════════════════════════════════
+// NAVIGATION
+// ══════════════════════════════════════════
+function showTab(id) {
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('tab-' + id).classList.add('active');
+  const items = document.querySelectorAll('.nav-item');
+  items.forEach(item => {
+    if (item.getAttribute('onclick') && item.getAttribute('onclick').includes("'" + id + "'")) {
+      item.classList.add('active');
+    }
+  });
+  if (id === 'dashboard') updateDashboard();
+  if (id === 'history') renderHistory();
+}
+
+// ══════════════════════════════════════════
+// COUNTDOWN
+// ══════════════════════════════════════════
+function updateCountdowns() {
+  const now = new Date();
+  const dates = [
+    { el: 'days-oct', target: new Date('2026-10-08') },
+    { el: 'days-jan', target: new Date('2027-01-02') },
+    { el: 'days-may', target: new Date('2027-05-01') },
+  ];
+  dates.forEach(({ el, target }) => {
+    const diff = Math.max(0, Math.ceil((target - now) / (1000*60*60*24)));
+    document.getElementById(el).textContent = diff > 0 ? diff : '📌';
+  });
+}
+
+// ══════════════════════════════════════════
+// UNITS — Build topic tables
+// ══════════════════════════════════════════
+function buildUnitTables() {
+  for (let u = 1; u <= 6; u++) {
+    const unit = UNITS[u];
+    const table = document.getElementById(`unit${u}-table`);
+    const topicStates = load(`unit${u}_topics`, {});
+    let html = `<thead><tr><th></th><th>Section</th><th>Topic</th><th>Status</th></tr></thead><tbody>`;
+    let total = 0, done = 0;
+    for (const [section, topics] of Object.entries(unit.sections)) {
+      html += `<tr class="topic-section-row"><td colspan="4">${section}</td></tr>`;
+      topics.forEach((topic, i) => {
+        const key = `${section}__${i}`;
+        const checked = topicStates[key] === 'done';
+        if (checked) done++;
+        total++;
+        html += `<tr>
+          <td><button class="check-btn ${checked ? 'checked' : ''}" onclick="toggleTopic(${u},'${key.replace(/'/g,"\\'")}',this)">
+            ${checked ? '✓' : ''}
+          </button></td>
+          <td style="color:var(--text-light); font-size:12px">${section}</td>
+          <td>${topic}</td>
+          <td><span class="status-badge ${checked ? 'badge-done' : 'badge-notdone'}">${checked ? 'Done ✓' : 'Not Done'}</span></td>
+        </tr>`;
+      });
+    }
+    html += '</tbody>';
+    table.innerHTML = html;
+    updateUnitProgress(u, done, total);
+  }
+}
+
+function toggleTopic(unitNum, key, btn) {
+  const states = load(`unit${unitNum}_topics`, {});
+  const wasDone = states[key] === 'done';
+  states[key] = wasDone ? '' : 'done';
+  save(`unit${unitNum}_topics`, states);
+  btn.classList.toggle('checked', !wasDone);
+  btn.textContent = !wasDone ? '✓' : '';
+  const row = btn.closest('tr');
+  const badge = row.querySelector('.status-badge');
+  badge.className = `status-badge ${!wasDone ? 'badge-done' : 'badge-notdone'}`;
+  badge.textContent = !wasDone ? 'Done ✓' : 'Not Done';
+  recalcUnit(unitNum);
+  if (!wasDone) {
+    const topic = row.cells[2].textContent;
+    addHistoryEntry('topic', `✅ Marked as done: ${topic}`, `Unit ${unitNum} — ${UNITS[unitNum].name}`, '#78E3FD');
+  }
+  updateDashboard();
+  showToast(!wasDone ? '✅ Topic marked as done!' : '↩ Topic unmarked');
+}
+
+function recalcUnit(unitNum) {
+  const states = load(`unit${unitNum}_topics`, {});
+  const unit = UNITS[unitNum];
+  let total = 0, done = 0;
+  for (const [section, topics] of Object.entries(unit.sections)) {
+    topics.forEach((_, i) => {
+      total++;
+      if (states[`${section}__${i}`] === 'done') done++;
+    });
+  }
+  updateUnitProgress(unitNum, done, total);
+}
+
+function updateUnitProgress(u, done, total) {
+  const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+  const pctEl = document.getElementById(`u${u}-pct`);
+  const barEl = document.getElementById(`u${u}-bar`);
+  const doneEl = document.getElementById(`u${u}-done`);
+  const totalEl = document.getElementById(`u${u}-total`);
+  if (pctEl) pctEl.textContent = pct + '%';
+  if (barEl) barEl.style.width = pct + '%';
+  if (doneEl) doneEl.textContent = done;
+  if (totalEl) totalEl.textContent = total;
+}
+
+// ══════════════════════════════════════════
+// DASHBOARD
+// ══════════════════════════════════════════
+function updateDashboard() {
+  // Total topics
+  let totalDone = 0;
+  for (let u = 1; u <= 6; u++) {
+    const states = load(`unit${u}_topics`, {});
+    Object.values(states).forEach(v => { if (v === 'done') totalDone++; });
+  }
+  document.getElementById('total-topics-done').textContent = totalDone;
+
+  // Hours this week
+  const wk = getCurrentWeekKey();
+  const weekData = load('week_' + wk, {});
+  let hrs = 0;
+  const subjects = getSubjectList();
+  subjects.forEach(s => {
+    const days = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+    days.forEach(d => { hrs += parseFloat(weekData[`${s}_${d}`] || 0); });
+  });
+  document.getElementById('total-hours-dash').textContent = hrs.toFixed(1) + 'h';
+
+  // Papers
+  const papers = load('paper_results', []);
+  document.getElementById('papers-done-dash').textContent = papers.length;
+
+  // Streak
+  const streak = load('streak', 0);
+  document.getElementById('streak-num-dash').textContent = streak + '🔥';
+
+  // Unit overview
+  const container = document.getElementById('unit-overview-cards');
+  if (container) {
+    let html = '';
+    for (let u = 1; u <= 6; u++) {
+      const states = load(`unit${u}_topics`, {});
+      const unit = UNITS[u];
+      let total = 0, done = 0;
+      for (const [section, topics] of Object.entries(unit.sections)) {
+        topics.forEach((_, i) => { total++; if (states[`${section}__${i}`] === 'done') done++; });
+      }
+      const pct = total > 0 ? Math.round((done/total)*100) : 0;
+      html += `<div class="unit-card" onclick="showTab('unit${u}')">
+        <h3>Unit ${u}</h3>
+        <p>${unit.name}</p>
+        <div class="unit-pct">${pct}%</div>
+        <div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>
+        <div style="font-size:11px; color:var(--text-light); margin-top:6px">${done}/${total} topics</div>
+      </div>`;
+    }
+    container.innerHTML = html;
+  }
+}
+
+// ══════════════════════════════════════════
+// QUICK LOG
+// ══════════════════════════════════════════
+function logQuickStudy() {
+  const text = document.getElementById('quick-study-text').value.trim();
+  const hours = parseFloat(document.getElementById('quick-study-hours').value) || 0;
+  if (!text) { showToast('⚠️ Please enter what you studied'); return; }
+  addHistoryEntry('study', `📚 Study session: ${text}`, `${hours}h logged`, '#C8B6FF');
+  updateStreak();
+  showToast(`✨ Logged ${hours}h of ${text}!`);
+  document.getElementById('quick-study-text').value = '';
+  document.getElementById('quick-study-hours').value = '';
+  updateDashboard();
+}
+
+// ══════════════════════════════════════════
+// TIMETABLE
+// ══════════════════════════════════════════
+function buildTimetable() {
+  function render(key, containerId) {
+    const exams = TIMETABLE[key];
+    const container = document.getElementById(containerId);
+    container.innerHTML = exams.map(e => `
+      <div class="exam-row">
+        <div style="font-weight:600; font-size:13px">${e.date}</div>
+        <span class="subject-tag ${e.tag}">${e.code.split(' ')[2] || e.code}</span>
+        <div>${e.subject}</div>
+        <div style="color:var(--text-light)">${e.duration}</div>
+        <div style="color:var(--text-mid)">${e.time}</div>
+      </div>
+    `).join('');
+  }
+  render('mayjune2026','timetable-mayjune2026');
+  render('oct2026','timetable-oct2026');
+  render('jan2027','timetable-jan2027');
+  render('may2027','timetable-may2027');
+}
+
+// ══════════════════════════════════════════
+// SCHEDULE
+// ══════════════════════════════════════════
+function buildSchedule() {
+  const statusKey = load('schedule_status', {});
+  function renderPhase(data, containerId) {
+    const container = document.getElementById(containerId);
+    container.innerHTML = data.map((item, i) => {
+      const key = containerId + '_' + i;
+      const done = statusKey[key];
+      return `<div class="schedule-week" style="${done ? 'opacity:0.6' : ''}">
+        <div>
+          <div class="week-num">${item.week}</div>
+        </div>
+        <div>
+          <div class="week-topic">${item.topic}</div>
+          <div class="week-practice">📋 ${item.practice}</div>
+          <div style="font-size:11px; color:var(--violet); margin-top:4px">🎯 ${item.milestone}</div>
+        </div>
+        <button class="check-btn ${done ? 'checked' : ''}" onclick="toggleScheduleItem('${key}',this)" style="flex-shrink:0">${done ? '✓' : ''}</button>
+      </div>`;
+    }).join('');
+  }
+  renderPhase(SCHEDULE_OCT, 'schedule-oct');
+  renderPhase(SCHEDULE_JAN, 'schedule-jan');
+  renderPhase(SCHEDULE_MAY, 'schedule-may');
+}
+
+function toggleScheduleItem(key, btn) {
+  const states = load('schedule_status', {});
+  const was = states[key];
+  states[key] = was ? '' : 'done';
+  save('schedule_status', states);
+  btn.classList.toggle('checked', !was);
+  btn.textContent = !was ? '✓' : '';
+  btn.closest('.schedule-week').style.opacity = !was ? '0.6' : '1';
+  showToast(!was ? '✅ Week completed!' : '↩ Unmarked');
+}
+
+// ══════════════════════════════════════════
+// WEEKLY TRACKER
+// ══════════════════════════════════════════
+let currentWeekOffset = 0;
+
+function getCurrentWeekKey(offset = 0) {
+  const now = new Date();
+  const day = now.getDay() || 7;
+  const monday = new Date(now);
+  monday.setDate(now.getDate() - day + 1 + (offset * 7));
+  return `${monday.getFullYear()}-${String(monday.getMonth()+1).padStart(2,'0')}-${String(monday.getDate()).padStart(2,'0')}`;
+}
+
+function getWeekLabel(offset = 0) {
+  const now = new Date();
+  const day = now.getDay() || 7;
+  const monday = new Date(now);
+  monday.setDate(now.getDate() - day + 1 + (offset * 7));
+  const sunday = new Date(monday);
+  sunday.setDate(monday.getDate() + 6);
+  const fmt = d => d.toLocaleDateString('en-GB', {day:'numeric', month:'short'});
+  return `${fmt(monday)} – ${fmt(sunday)}`;
+}
+
+function getSubjectList() {
+  return ['Unit 1', 'Unit 2', 'Unit 3', 'Unit 4', 'Unit 5', 'Unit 6', 'Revision', 'Past Papers'];
+}
+
+function buildWeeklyGrid() {
+  const wk = getCurrentWeekKey(currentWeekOffset);
+  const weekData = load('week_' + wk, {});
+  document.getElementById('week-label').textContent = getWeekLabel(currentWeekOffset);
+
+  const days = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  const subjects = getSubjectList();
+
+  let html = `<div></div>`;
+  days.forEach(d => {
+    html += `<div class="day-header">${d}</div>`;
+  });
+
+  subjects.forEach(s => {
+    html += `<div class="subject-label">${s}</div>`;
+    days.forEach(d => {
+      const val = weekData[`${s}_${d}`] || '';
+      html += `<input class="hour-input" type="number" min="0" max="12" step="0.5" value="${val}" placeholder="0"
+        oninput="updateWeekCell('${wk}','${s}','${d}',this.value)" />`;
+    });
+  });
+
+  document.getElementById('weekly-grid').innerHTML = html;
+  updateWeekTotals(wk);
+}
+
+function updateWeekCell(wk, subject, day, val) {
+  const weekData = load('week_' + wk, {});
+  weekData[`${subject}_${day}`] = parseFloat(val) || 0;
+  save('week_' + wk, weekData);
+  updateWeekTotals(wk);
+}
+
+function updateWeekTotals(wk) {
+  const weekData = load('week_' + wk, {});
+  const subjects = getSubjectList();
+  const days = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  let total = 0;
+  const dayTotals = {};
+  days.forEach(d => dayTotals[d] = 0);
+
+  subjects.forEach(s => {
+    days.forEach(d => {
+      const v = parseFloat(weekData[`${s}_${d}`] || 0);
+      total += v;
+      dayTotals[d] += v;
+    });
+  });
+
+  document.getElementById('week-total').textContent = total.toFixed(1) + 'h';
+  document.getElementById('week-avg').textContent = (total / 7).toFixed(1) + 'h';
+  const bestDay = Object.entries(dayTotals).sort((a,b) => b[1]-a[1])[0];
+  document.getElementById('week-best').textContent = bestDay[1] > 0 ? `${bestDay[0]} (${bestDay[1].toFixed(1)}h)` : '—';
+}
+
+function changeWeek(dir) {
+  currentWeekOffset += dir;
+  buildWeeklyGrid();
+}
+
+function saveWeek() {
+  const wk = getCurrentWeekKey(currentWeekOffset);
+  const weekData = load('week_' + wk, {});
+  const subjects = getSubjectList();
+  const days = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  let total = 0;
+  subjects.forEach(s => days.forEach(d => { total += parseFloat(weekData[`${s}_${d}`] || 0); }));
+  addHistoryEntry('week', `📊 Weekly hours saved: ${getWeekLabel(currentWeekOffset)}`, `${total.toFixed(1)} total hours`, '#FDC5F5');
+  updateStreak();
+  showToast('💾 Week saved successfully!');
+  renderWeeklyHistory();
+  updateDashboard();
+}
+
+function renderWeeklyHistory() {
+  const keys = [];
+  for (let i = 0; i < localStorage.length; i++) {
+    const k = localStorage.key(i);
+    if (k && k.startsWith('jana_week_')) keys.push(k.replace('jana_',''));
+  }
+  keys.sort().reverse();
+  const subjects = getSubjectList();
+  const days = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  const container = document.getElementById('weekly-history-list');
+  if (!keys.length) { container.innerHTML = '<div style="color:var(--text-light);font-size:13px;padding:20px 0">No weeks saved yet.</div>'; return; }
+  container.innerHTML = keys.slice(0, 8).map(wk => {
+    const data = load(wk, {});
+    let total = 0;
+    subjects.forEach(s => days.forEach(d => { total += parseFloat(data[`${s}_${d}`] || 0); }));
+    return `<div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid rgba(200,182,255,0.2);font-size:13px">
+      <span style="color:var(--text-dark)">Week of ${wk.replace('week_','')}</span>
+      <span style="color:var(--violet);font-weight:600">${total.toFixed(1)}h</span>
+    </div>`;
+  }).join('');
+}
+
+// ══════════════════════════════════════════
+// FORMULAS
+// ══════════════════════════════════════════
+function buildFormulas() {
+  const statuses = load('formula_status', {});
+  renderFormulaGrid('all', statuses);
+}
+
+function renderFormulaGrid(filter, statuses) {
+  const grid = document.getElementById('formula-grid');
+  const filtered = filter === 'all' ? FORMULAS
+    : filter === 'mastered' ? FORMULAS.filter(f => statuses[f.eq] === 'mastered')
+    : filter === 'learning' ? FORMULAS.filter(f => statuses[f.eq] === 'learning')
+    : FORMULAS.filter(f => f.unit === filter);
+
+  grid.innerHTML = filtered.map(f => {
+    const st = statuses[f.eq] || '';
+    return `<div class="formula-card ${st}" data-eq="${f.eq}">
+      <div class="formula-name">${f.unit} · ${f.topic}</div>
+      <div class="formula-eq">${f.eq}</div>
+      <div class="formula-unit">${f.name}</div>
+      <div class="formula-status-btn">
+        <button class="f-btn mastered ${st==='mastered'?'active':''}" onclick="setFormula('${f.eq.replace(/'/g,"\\'")}','mastered',this)">✅ Mastered</button>
+        <button class="f-btn learning ${st==='learning'?'active':''}" onclick="setFormula('${f.eq.replace(/'/g,"\\'")}','learning',this)">📖 Learning</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function setFormula(eq, status, btn) {
+  const statuses = load('formula_status', {});
+  const prev = statuses[eq];
+  if (prev === status) { statuses[eq] = ''; } else { statuses[eq] = status; }
+  save('formula_status', statuses);
+  const card = btn.closest('.formula-card');
+  card.className = `formula-card ${statuses[eq] || ''}`;
+  card.querySelectorAll('.f-btn').forEach(b => b.classList.remove('active'));
+  if (statuses[eq]) btn.classList.add('active');
+  if (statuses[eq] === 'mastered') {
+    addHistoryEntry('formula', `📐 Formula mastered: ${eq}`, 'Keep going!', '#78E3FD');
+    updateDashboard();
+  }
+  showToast(statuses[eq] === 'mastered' ? '🎉 Formula mastered!' : statuses[eq] === 'learning' ? '📖 Marked as learning' : 'Status cleared');
+}
+
+function filterFormulas(filter) {
+  const statuses = load('formula_status', {});
+  renderFormulaGrid(filter, statuses);
+}
+
+// ══════════════════════════════════════════
+// QUIZ
+// ══════════════════════════════════════════
+let quizIndex = 0;
+let quizFlipped = false;
+let quizScore = 0, quizMiss = 0;
+let quizOrder = [];
+
+function initQuiz() {
+  quizOrder = [...FORMULAS].sort(() => Math.random() - 0.5);
+  quizIndex = 0;
+  quizScore = 0;
+  quizMiss = 0;
+  renderQuizCard();
+}
+
+function renderQuizCard() {
+  if (!quizOrder.length) return;
+  const f = quizOrder[quizIndex % quizOrder.length];
+  quizFlipped = false;
+  const card = document.getElementById('quiz-card');
+  card.classList.remove('flipped');
+  document.getElementById('quiz-name').textContent = f.name;
+  document.getElementById('quiz-eq').textContent = '???';
+  document.getElementById('quiz-hint').textContent = `${f.unit} · ${f.topic} — Click to reveal`;
+  document.getElementById('quiz-progress').textContent = `Card ${(quizIndex % quizOrder.length) + 1} of ${quizOrder.length}`;
+  document.getElementById('quiz-score').textContent = quizScore;
+  document.getElementById('quiz-miss').textContent = quizMiss;
+}
+
+function flipQuiz() {
+  if (!quizOrder.length) return;
+  const f = quizOrder[quizIndex % quizOrder.length];
+  quizFlipped = !quizFlipped;
+  const card = document.getElementById('quiz-card');
+  if (quizFlipped) {
+    card.classList.add('flipped');
+    document.getElementById('quiz-eq').textContent = f.eq;
+    document.getElementById('quiz-hint').textContent = `${f.unit} · ${f.topic}`;
+  } else {
+    card.classList.remove('flipped');
+    document.getElementById('quiz-eq').textContent = '???';
+    document.getElementById('quiz-hint').textContent = `${f.unit} · ${f.topic} — Click to reveal`;
+  }
+}
+
+function quizAnswer(knew) {
+  if (!quizFlipped) { showToast('👆 Flip the card first!'); return; }
+  if (knew) quizScore++; else quizMiss++;
+  document.getElementById('quiz-score').textContent = quizScore;
+  document.getElementById('quiz-miss').textContent = quizMiss;
+  nextQuiz();
+  showToast(knew ? '🎉 Well done!' : '💪 Keep practising!');
+}
+
+function nextQuiz() {
+  quizIndex++;
+  if (quizIndex >= quizOrder.length) {
+    quizIndex = 0;
+    quizOrder = [...FORMULAS].sort(() => Math.random() - 0.5);
+    showToast('🔄 Starting new round!');
+  }
+  renderQuizCard();
+}
+
+// ══════════════════════════════════════════
+// KEYWORDS
+// ══════════════════════════════════════════
+function buildKeywords() {
+  document.getElementById('keywords-table').innerHTML = KEYWORDS.map(k => `
+    <tr>
+      <td><strong style="color:var(--violet)">${k.word}</strong></td>
+      <td style="color:var(--text-mid)">${k.means}</td>
+      <td style="color:var(--text-dark)">${k.how}</td>
+      <td><span class="status-badge badge-done">${k.marks}</span></td>
+    </tr>
+  `).join('');
+
+  document.getElementById('markscheme-table').innerHTML = MARKSCHEME.map(m => `
+    <tr>
+      <td><strong style="color:var(--violet)">${m.aspect}</strong></td>
+      <td>${m.looks}</td>
+      <td><span class="status-badge badge-done">${m.marks}</span></td>
+      <td style="color:var(--text-mid)">${m.how}</td>
+    </tr>
+  `).join('');
+}
+
+// ══════════════════════════════════════════
+// PAST PAPERS
+// ══════════════════════════════════════════
+function getGrade(pct) {
+  if (pct >= 90) return { g: 'A*', cls: 'grade-a-star' };
+  if (pct >= 75) return { g: 'A', cls: 'grade-a' };
+  if (pct >= 65) return { g: 'B', cls: 'grade-b' };
+  if (pct >= 50) return { g: 'C', cls: 'grade-c' };
+  return { g: 'E', cls: 'grade-e' };
+}
+
+function addPaperResult() {
+  const year = document.getElementById('paper-year').value;
+  const session = document.getElementById('paper-session').value;
+  const unit = document.getElementById('paper-unit').value;
+  const score = parseFloat(document.getElementById('paper-score').value);
+  const notes = document.getElementById('paper-notes').value;
+  if (!score) { showToast('⚠️ Please enter a score'); return; }
+  const pct = Math.round((score / 75) * 100);
+  const grade = getGrade(pct);
+  const results = load('paper_results', []);
+  results.push({ year, session, unit, score, pct, grade: grade.g, notes, date: new Date().toLocaleDateString('en-GB') });
+  save('paper_results', results);
+  renderPaperResults();
+  addHistoryEntry('paper', `📝 Past paper: ${year} ${session} Unit ${unit}`, `Score: ${score}/75 (${pct}%) — ${grade.g}`, '#E7C6FF');
+  updateDashboard();
+  showToast(`📝 Score logged! ${grade.g} — ${pct}%`);
+  document.getElementById('paper-score').value = '';
+  document.getElementById('paper-notes').value = '';
+}
+
+function renderPaperResults() {
+  const results = load('paper_results', []);
+  const tbody = document.getElementById('papers-results-table');
+  const empty = document.getElementById('papers-empty');
+  if (!results.length) { tbody.innerHTML = ''; empty.style.display = 'block'; return; }
+  empty.style.display = 'none';
+  tbody.innerHTML = results.map((r, i) => {
+    const g = getGrade(r.pct);
+    return `<tr>
+      <td>${r.year}</td>
+      <td>${r.session}</td>
+      <td>Unit ${r.unit}</td>
+      <td><strong>${r.score}/75</strong></td>
+      <td>${r.pct}%</td>
+      <td><span class="grade-badge ${g.cls}">${r.grade}</span></td>
+      <td style="color:var(--text-light); font-size:12px">${r.notes || '—'}</td>
+      <td><button onclick="removePaper(${i})" style="background:none;border:none;cursor:pointer;color:var(--not-done);font-size:14px">×</button></td>
+    </tr>`;
+  }).join('');
+
+  // Stats per unit
+  const stats = document.getElementById('paper-stats');
+  let html = '';
+  for (let u = 1; u <= 6; u++) {
+    const ures = results.filter(r => parseInt(r.unit) === u);
+    const avg = ures.length ? Math.round(ures.reduce((s,r) => s+r.pct, 0) / ures.length) : null;
+    html += `<div class="stat-card"><div class="stat-num" style="font-size:24px">${avg !== null ? avg+'%' : '—'}</div><div class="stat-label">Unit ${u} Avg (${ures.length} papers)</div></div>`;
+  }
+  stats.innerHTML = html;
+}
+
+function removePaper(i) {
+  const results = load('paper_results', []);
+  results.splice(i, 1);
+  save('paper_results', results);
+  renderPaperResults();
+  showToast('🗑️ Result removed');
+}
+
+// ══════════════════════════════════════════
+// ASSIGNMENTS
+// ══════════════════════════════════════════
+function buildAssignments() {
+  const assignStates = load('assign_states', {});
+  const tbody = document.getElementById('assignments-tbody');
+  let html = '';
+  let complete = 0, totalScores = [], overdue = 0;
+  const today = new Date();
+
+  ASSIGNMENTS_DATA.forEach((a, i) => {
+    const st = assignStates[i] || { status: a.status, score: '', notes: '' };
+    const due = new Date(a.due);
+    const daysLeft = Math.ceil((due - today) / (1000*60*60*24));
+    const isOverdue = daysLeft < 0 && st.status !== 'Complete';
+    if (isOverdue) overdue++;
+    if (st.status === 'Complete') complete++;
+    const pct = st.score ? Math.round((parseFloat(st.score) / a.max) * 100) : null;
+    if (pct !== null) totalScores.push(pct);
+    const g = pct !== null ? getGrade(pct) : null;
+
+    html += `<tr class="assign-row status-${st.status.toLowerCase().replace(' ','-')}">
+      <td><span class="status-badge badge-done" style="background:rgba(200,182,255,0.3);color:var(--deep-purple)">Unit ${a.unit}</span></td>
+      <td style="font-size:12px">${a.type}</td>
+      <td style="font-size:12px;color:var(--text-mid)">${a.desc}</td>
+      <td>${a.max}</td>
+      <td style="color:${isOverdue?'#C02020':'var(--text-mid)'}; font-size:12px">${a.due}</td>
+      <td><input class="score-input" type="number" min="0" max="${a.max}" value="${st.score}" placeholder="—" oninput="updateAssign(${i},this.value)" /></td>
+      <td>${pct !== null ? pct+'%' : '—'}</td>
+      <td>${g ? `<span class="grade-badge ${g.cls}">${g.g}</span>` : '—'}</td>
+      <td>
+        <select class="input-field" style="width:120px;padding:4px 8px;font-size:12px" onchange="updateAssignStatus(${i},this.value)">
+          <option ${st.status==='Not Started'?'selected':''}>Not Started</option>
+          <option ${st.status==='In Progress'?'selected':''}>In Progress</option>
+          <option ${st.status==='Complete'?'selected':''}>Complete</option>
+        </select>
+      </td>
+      <td><input class="input-field" style="font-size:12px;padding:5px 8px" value="${st.notes||''}" placeholder="Notes" oninput="updateAssignNotes(${i},this.value)" /></td>
+    </tr>`;
+  });
+
+  tbody.innerHTML = html;
+  document.getElementById('assign-complete').textContent = complete;
+  document.getElementById('assign-overdue').textContent = overdue;
+  document.getElementById('assign-avg').textContent = totalScores.length ? Math.round(totalScores.reduce((a,b)=>a+b,0)/totalScores.length)+'%' : '—';
+}
+
+function updateAssign(i, val) {
+  const states = load('assign_states', {});
+  if (!states[i]) states[i] = {};
+  states[i].score = val;
+  save('assign_states', states);
+  buildAssignments();
+}
+
+function updateAssignStatus(i, val) {
+  const states = load('assign_states', {});
+  if (!states[i]) states[i] = {};
+  states[i].status = val;
+  save('assign_states', states);
+  if (val === 'Complete') {
+    addHistoryEntry('assign', `✅ Assignment completed: Unit ${ASSIGNMENTS_DATA[i].unit} — ${ASSIGNMENTS_DATA[i].type}`, '', '#B388EB');
+  }
+  buildAssignments();
+  showToast('Status updated!');
+}
+
+function updateAssignNotes(i, val) {
+  const states = load('assign_states', {});
+  if (!states[i]) states[i] = {};
+  states[i].notes = val;
+  save('assign_states', states);
+}
+
+// ══════════════════════════════════════════
+// MOCKS
+// ══════════════════════════════════════════
+function addMock() {
+  const unit = document.getElementById('mock-unit').value;
+  const type = document.getElementById('mock-type').value;
+  const date = document.getElementById('mock-date').value;
+  const score = parseFloat(document.getElementById('mock-score').value);
+  const target = parseFloat(document.getElementById('mock-target').value) || 90;
+  const notes = document.getElementById('mock-notes').value;
+  if (!score) { showToast('⚠️ Please enter a score'); return; }
+  const pct = Math.round(score);
+  const gap = target - pct;
+  const grade = getGrade(pct);
+  const mocks = load('mock_results', []);
+  mocks.push({ unit, type, date, score, pct, target, gap, grade: grade.g, notes });
+  save('mock_results', mocks);
+  renderMocks();
+  addHistoryEntry('mock', `🎯 Mock exam: Unit ${unit} — ${type}`, `Score: ${pct}% (${grade.g}) · Target: ${target}%`, '#FDC5F5');
+  showToast(`🎯 Mock logged! ${grade.g} — ${pct}%`);
+  document.getElementById('mock-score').value = '';
+  document.getElementById('mock-notes').value = '';
+}
+
+function renderMocks() {
+  const mocks = load('mock_results', []);
+  const tbody = document.getElementById('mocks-tbody');
+  const empty = document.getElementById('mocks-empty');
+  if (!mocks.length) { tbody.innerHTML = ''; empty.style.display = 'block'; return; }
+  empty.style.display = 'none';
+  tbody.innerHTML = mocks.map((m, i) => {
+    const g = getGrade(m.pct);
+    return `<tr>
+      <td>Unit ${m.unit}</td>
+      <td style="font-size:12px">${m.type || '—'}</td>
+      <td style="font-size:12px">${m.date || '—'}</td>
+      <td><strong>${m.score}/100</strong></td>
+      <td>${m.pct}%</td>
+      <td><span class="grade-badge ${g.cls}">${m.grade}</span></td>
+      <td>${m.target}%</td>
+      <td style="color:${m.gap > 0 ? '#C02020' : '#2D9B5A'}">${m.gap > 0 ? '-'+m.gap+'%' : '+'+Math.abs(m.gap)+'%'}</td>
+      <td style="font-size:12px;color:var(--text-light)">${m.notes || '—'}</td>
+      <td><button onclick="removeMock(${i})" style="background:none;border:none;cursor:pointer;color:var(--not-done);font-size:14px">×</button></td>
+    </tr>`;
+  }).join('');
+}
+
+function removeMock(i) {
+  const mocks = load('mock_results', []);
+  mocks.splice(i, 1);
+  save('mock_results', mocks);
+  renderMocks();
+  showToast('🗑️ Mock removed');
+}
+
+// ══════════════════════════════════════════
+// EXAM CHECKLIST
+// ══════════════════════════════════════════
+function buildChecklist() {
+  const checkStates = load('checklist_states', {});
+  const container = document.getElementById('checklist-container');
+  let html = '';
+  let totalItems = 0, doneItems = 0;
+
+  for (const [section, items] of Object.entries(EXAM_CHECKLIST)) {
+    html += `<div class="checklist-section"><h3>${section}</h3>`;
+    items.forEach((item, i) => {
+      const key = `${section}__${i}`;
+      const done = checkStates[key];
+      if (done) doneItems++;
+      totalItems++;
+      html += `<div class="checklist-item ${done ? 'done-item' : ''}" onclick="toggleChecklistItem('${key}',this)">
+        <button class="check-btn ${done ? 'checked' : ''}" style="pointer-events:none">${done ? '✓' : ''}</button>
+        <div>
+          <div class="item-text">${item.text}</div>
+          <div class="item-sub">${item.sub}</div>
+        </div>
+      </div>`;
+    });
+    html += '</div>';
+  }
+
+  container.innerHTML = html;
+  document.getElementById('checklist-done-count').textContent = doneItems;
+  document.getElementById('checklist-total-count').textContent = totalItems;
+  const pct = totalItems > 0 ? Math.round((doneItems/totalItems)*100) : 0;
+  document.getElementById('checklist-bar').style.width = pct + '%';
+}
+
+function toggleChecklistItem(key, el) {
+  const states = load('checklist_states', {});
+  const was = states[key];
+  states[key] = was ? '' : 'done';
+  save('checklist_states', states);
+  buildChecklist();
+  showToast(was ? '↩ Unchecked' : '✅ Done!');
+}
+
+function resetChecklist() {
+  save('checklist_states', {});
+  buildChecklist();
+  showToast('🔄 Checklist reset for new exam!');
+}
+
+// ══════════════════════════════════════════
+// HISTORY
+// ══════════════════════════════════════════
+function addHistoryEntry(type, text, detail, color) {
+  const history = load('history_log', []);
+  history.unshift({ type, text, detail, color, timestamp: new Date().toLocaleString('en-GB') });
+  if (history.length > 200) history.pop();
+  save('history_log', history);
+
+  // Update all-time stats
+  const stats = load('history_stats', { topics:0, sessions:0, hours:0, papers:0, formulas:0 });
+  if (type === 'topic') stats.topics++;
+  if (type === 'study') { stats.sessions++; const h = parseFloat(detail) || 0; stats.hours += h; }
+  if (type === 'paper') stats.papers++;
+  if (type === 'formula') stats.formulas++;
+  save('history_stats', stats);
+}
+
+function renderHistory() {
+  const history = load('history_log', []);
+  const feed = document.getElementById('history-feed');
+  if (!history.length) {
+    feed.innerHTML = '<div style="text-align:center; color:var(--text-light); padding:30px; font-size:13px">No activity yet. Start studying to see your history here! 🚀</div>';
+  } else {
+    feed.innerHTML = history.map(h => `
+      <div class="history-item">
+        <div class="history-dot" style="background:${h.color}"></div>
+        <div>
+          <div class="h-text">${h.text}</div>
+          ${h.detail ? `<div class="h-detail">${h.detail}</div>` : ''}
+          <div class="h-time">${h.timestamp}</div>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  const stats = load('history_stats', { topics:0, sessions:0, hours:0, papers:0, formulas:0 });
+  document.getElementById('hist-topics').textContent = stats.topics;
+  document.getElementById('hist-sessions').textContent = stats.sessions;
+  document.getElementById('hist-hours').textContent = stats.hours.toFixed(1) + 'h';
+  document.getElementById('hist-papers').textContent = stats.papers;
+  document.getElementById('hist-formulas').textContent = stats.formulas;
+
+  const streak = load('streak', 0);
+  document.getElementById('streak-big').textContent = streak;
+  const lastStudied = load('last_studied_date', null);
+  document.getElementById('last-studied').textContent = lastStudied || 'Never';
+}
+
+function clearHistory() {
+  if (confirm('Clear all history? This cannot be undone.')) {
+    save('history_log', []);
+    save('history_stats', { topics:0, sessions:0, hours:0, papers:0, formulas:0 });
+    renderHistory();
+    showToast('🗑️ History cleared');
+  }
+}
+
+// ══════════════════════════════════════════
+// STREAK
+// ══════════════════════════════════════════
+function updateStreak() {
+  const today = new Date().toLocaleDateString('en-GB');
+  const lastDate = load('last_studied_date', null);
+  let streak = load('streak', 0);
+  if (lastDate === today) return;
+  const yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+  const yStr = yesterday.toLocaleDateString('en-GB');
+  if (lastDate === yStr) { streak++; }
+  else if (lastDate !== today) { streak = 1; }
+  save('streak', streak);
+  save('last_studied_date', today);
+}
+
+// ══════════════════════════════════════════
+// WELLNESS
+// ══════════════════════════════════════════
+function setMood(emoji, label) {
+  document.querySelectorAll('.mood-btn').forEach(b => b.classList.remove('selected'));
+  event.target.classList.add('selected');
+  document.getElementById('mood-logged').textContent = `Today's mood: ${emoji} — ${label}`;
+  addHistoryEntry('mood', `${emoji} Mood logged: ${label}`, '', '#E7C6FF');
+  showToast(`${emoji} Mood logged!`);
+}
+
+function newQuote() {
+  const q = QUOTES[Math.floor(Math.random() * QUOTES.length)];
+  document.getElementById('daily-quote').textContent = `"${q.text}"`;
+  document.getElementById('daily-quote-author').textContent = `— ${q.author}`;
+}
+
+function saveJournal() {
+  const text = document.getElementById('journal-text').value.trim();
+  if (!text) { showToast('⚠️ Write something first!'); return; }
+  const entries = load('journal_entries', []);
+  entries.unshift({ text, date: new Date().toLocaleString('en-GB') });
+  save('journal_entries', entries);
+  renderJournal();
+  document.getElementById('journal-text').value = '';
+  addHistoryEntry('journal', '📓 Journal entry saved', '', '#FDC5F5');
+  showToast('💜 Journal saved!');
+}
+
+function renderJournal() {
+  const entries = load('journal_entries', []);
+  const feed = document.getElementById('journal-feed');
+  if (!entries.length) {
+    feed.innerHTML = '<div style="text-align:center; color:var(--text-light); padding:20px; font-size:13px">No entries yet. Write something above! 🌸</div>';
+    return;
+  }
+  feed.innerHTML = entries.slice(0, 10).map(e => `
+    <div style="padding:12px 0; border-bottom:1px solid rgba(200,182,255,0.2)">
+      <div style="font-size:11px; color:var(--text-light); margin-bottom:4px">${e.date}</div>
+      <div style="font-size:13px; color:var(--text-dark)">${e.text}</div>
+    </div>
+  `).join('');
+}
+
+function updateStress(val) {
+  const msgs = ['','😌 You\'re feeling great — keep it up!','😊 Nice and calm. Perfect for studying!','🙂 Doing well! A light session today.','😐 Manageable. Take breaks every 25 mins.','😐 Middle ground. Try a short walk.','😕 Getting there. Breathe deeply.','😰 A bit stressed. Have a snack, take a break.','😰 Stressed. Close the books for 20 mins.','😤 Very stressed! Prioritise sleep tonight.','🌋 Overwhelmed. Please rest. You cannot pour from an empty cup.'];
+  document.getElementById('stress-msg').textContent = msgs[Math.round(val)] || '';
+}
+
+function logStress() {
+  const val = document.getElementById('stress-level').value;
+  addHistoryEntry('stress', `🌡️ Stress level logged: ${val}/10`, '', '#FFD6FF');
+  showToast(`Stress level ${val}/10 logged`);
+}
+
+// ══════════════════════════════════════════
+// TOAST
+// ══════════════════════════════════════════
+let toastTimer;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// ══════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════
+document.addEventListener('DOMContentLoaded', () => {
+  updateCountdowns();
+  buildUnitTables();
+  buildTimetable();
+  buildSchedule();
+  buildWeeklyGrid();
+  renderWeeklyHistory();
+  buildFormulas();
+  initQuiz();
+  buildKeywords();
+  renderPaperResults();
+  buildAssignments();
+  renderMocks();
+  buildChecklist();
+  renderJournal();
+  updateDashboard();
+  updateStress(5);
+  newQuote();
+
+  // Recalc unit progress from saved state
+  for (let u = 1; u <= 6; u++) recalcUnit(u);
+
+  setInterval(updateCountdowns, 60000);
+});
+</script>
+</body>
+</html>
